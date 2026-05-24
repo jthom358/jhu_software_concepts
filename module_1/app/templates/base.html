@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jonah Thomas | Personal Website</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <div class="site-title">Jonah Thomas</div>
+
+        <nav>
+            <a href="{{ url_for('main.home') }}" class="{% if active_page == 'home' %}active{% endif %}">Home</a>
+            <a href="{{ url_for('main.projects') }}" class="{% if active_page == 'projects' %}active{% endif %}">Projects</a>
+            <a href="{{ url_for('main.contact') }}" class="{% if active_page == 'contact' %}active{% endif %}">Contact</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

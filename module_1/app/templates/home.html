@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="home-layout">
+    <div class="bio-text">
+        <h1>Hi, I'm Jonah Thomas.</h1>
+        <h2>Signal Processing Engineer at Johns Hopkins Applied Physics Laboratory</h2>
+
+        <p>
+            I am a Signal Processing Engineer at Johns Hopkins Applied Physics Laboratory
+            (APL), currently participating in the Discovery Program, a rotational initiative
+            designed to develop future technical leaders across complex national security,
+            space, defense, healthcare, cyber, and applied research problem spaces.
+        </p>
+
+        <p>
+            My background spans statistical and analytical signal processing, navigation
+            systems, hardware design, and system-level testing, giving me a strong foundation
+            in both the theory and implementation of sensing, estimation, and autonomous
+            systems.
+        </p>
+
+        <p>
+            I am particularly interested in the intersection of guidance, navigation, and
+            control; perception; applied machine learning; and sensor fusion, especially as
+            artificial intelligence becomes increasingly integrated into physical systems
+            across defense, aerospace, autonomy, robotics, and intelligent platforms.
+        </p>
+
+        <p>
+            To complement my work at APL, I am pursuing a second master’s degree in
+            Artificial Intelligence from Johns Hopkins University. My goal is to build on my
+            signal processing and navigation background by developing deeper expertise in
+            machine learning, computer vision, intelligent systems, and data-driven approaches
+            to perception and autonomy.
+        </p>
+
+        <p>
+            Long term, I hope to contribute to the development and integration of advanced
+            AI-enabled sensing, navigation, and autonomous capabilities for high-impact
+            mission areas. I am especially motivated by work that connects deep technical
+            understanding with systems-level thinking: translating algorithms, sensor data,
+            and mission needs into robust capabilities for real-world environments.
+        </p>
+    </div>
+
+    <div class="profile-image">
+        <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Profile picture of Jonah Thomas">
+    </div>
+</section>
+{% endblock %}
