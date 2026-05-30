@@ -365,10 +365,9 @@ def _is_main_applicant_row(cells: list[str]) -> bool:
 
     return has_added_date and has_decision
 
-def _parse_first_records(html: str, limit: int = 5) -> list[dict[str, str | None]]:
+def _parse_records_from_html(html: str, page_url: str) -> list[dict[str, str | None]]:
     """
-    Parse the first few applicant records from the GradCafe table.
-    This is a test version before building the full scrape_data() loop.
+    Parse all applicant records from one GradCafe results page.
     """
     soup = BeautifulSoup(html, "lxml")
     rows = soup.find_all("tr")
@@ -376,8 +375,11 @@ def _parse_first_records(html: str, limit: int = 5) -> list[dict[str, str | None
     records = []
     index = 0
 
-    while index < len(rows) and len(records) < limit:
-        cells = [_clean_text(cell.get_text(" ", strip=True)) for cell in rows[index].find_all("td")]
+    while index < len(rows):
+        cells = [
+            _clean_text(cell.get_text(" ", strip=True))
+            for cell in rows[index].find_all("td")
+        ]
 
         if not _is_main_applicant_row(cells):
             index += 1
@@ -409,7 +411,7 @@ def _parse_first_records(html: str, limit: int = 5) -> list[dict[str, str | None
             "program_name_raw": program_name,
             "degree": degree,
             "date_added": date_added,
-            "entry_url": None,
+            "entry_url": page_url,
             "applicant_status": status,
             "acceptance_date": decision_date if status == "Accepted" else None,
             "rejection_date": decision_date if status == "Rejected" else None,
@@ -460,10 +462,12 @@ def main() -> None:
     _inspect_possible_result_blocks(html)
     _inspect_table_cells(html)
 
-    test_records = _parse_first_records(html, limit=5)
+    page_records = _parse_records_from_html(html, test_url)
 
-    print("\nParsed test records:")
-    for record in test_records:
+    print(f"\nParsed {len(page_records)} records from this page.")
+
+    print("\nFirst 5 parsed records:")
+    for record in page_records[:5]:
         print(record)
 
 if __name__ == "__main__":
