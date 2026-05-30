@@ -31,7 +31,7 @@ OUTPUT_PATH = Path("applicant_data.json")
 USER_AGENT = "jhu-software-concepts-student-scraper/1.0"
 MIN_DELAY_SECONDS = 1.5
 MAX_DELAY_SECONDS = 3.5
-TARGET_RECORDS = 500
+TARGET_RECORDS = 2000
 
 def _build_survey_url(page: int = 1, program: str | None = None) -> str:
     """
