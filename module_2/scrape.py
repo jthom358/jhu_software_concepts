@@ -11,6 +11,8 @@ This file contains the scraping logic for collecting public
  """
 
 import json
+import random
+import time
 import re
 from pathlib import Path
 from typing import Any
@@ -27,6 +29,9 @@ ROBOTS_URL = urljoin(BASE_URL, "/robots.txt")
 OUTPUT_PATH = Path("applicant_data.json")
 
 USER_AGENT = "jhu-software-concepts-student-scraper/1.0"
+MIN_DELAY_SECONDS = 2
+MAX_DELAY_SECONDS = 5
+TARGET_RECORDS = 100
 
 def _build_survey_url(page: int = 1, program: str | None = None) -> str:
     """
@@ -54,6 +59,13 @@ def _build_survey_url(page: int = 1, program: str | None = None) -> str:
 
     return urljoin(BASE_URL, SURVEY_PATH)
 
+def _polite_delay() -> None:
+    """
+    Pause between page requests so the scraper does not make rapid repeated requests.
+    """
+    delay = random.uniform(MIN_DELAY_SECONDS, MAX_DELAY_SECONDS)
+    print(f"Waiting {delay:.1f} seconds before next request...")
+    time.sleep(delay)
 
 def _load_robot_parser() -> RobotFileParser:
     """
@@ -432,6 +444,48 @@ def _parse_records_from_html(html: str, page_url: str) -> list[dict[str, str | N
         index += 1
 
     return records
+
+def scrape_data(target_records: int = TARGET_RECORDS) -> list[dict[str, str | None]]:
+    """
+    Scrape GradCafe applicant records from multiple public survey pages.
+    """
+    parser = _load_robot_parser()
+    records = []
+    page = 1
+
+    while len(records) < target_records:
+        page_url = _build_survey_url(page=page)
+
+        if not _can_fetch(page_url, parser):
+            print(f"Stopping because robots.txt does not allow this URL: {page_url}")
+            break
+
+        print(f"\nFetching page {page}: {page_url}")
+
+        html = _fetch_html_with_urllib(page_url)
+
+        if html is None:
+            print("Stopping because no HTML was fetched.")
+            break
+
+        page_records = _parse_records_from_html(html, page_url)
+
+        if not page_records:
+            print("Stopping because no records were found on this page.")
+            break
+
+        records.extend(page_records)
+
+        print(f"Found {len(page_records)} records on page {page}.")
+        print(f"Total records collected: {len(records)}")
+
+        page += 1
+
+        if len(records) < target_records:
+            _polite_delay()
+
+    return records[:target_records]
+
 def save_data(data: list[dict[str, str | None]], path: Path = OUTPUT_PATH) -> None:
     """
     Save applicant records to a JSON file.
@@ -449,44 +503,11 @@ def load_data(path: Path = OUTPUT_PATH) -> list[dict[str, str | None]]:
     
 def main() -> None:
     """
-    Small test to confirm that URL building, robots.txt checking,
-    and one safe urllib page request work
+    Run a small multi-page scrape test and save the records to applicant_data.json.
     """
-    parser = _load_robot_parser()
+    records = scrape_data(target_records=TARGET_RECORDS)
 
-    test_url = _build_survey_url(page=1)
-
-    print(f"Robots URL: {ROBOTS_URL}")
-    print(f"Test survey URL: {test_url}")
-    print(f"Allowed by robots.txt: {_can_fetch(test_url, parser)}")
-
-    if not _can_fetch(test_url, parser):
-        print("Stopping because robots.txt does not allow this URL.")
-        return
-
-    html = _fetch_html_with_urllib(test_url)
-
-    if html is None:
-        print("No HTML was fetched.")
-        return
-
-    print(f"Fetched HTML length: {len(html)} characters")
-    print("First 500 characters:")
-    print(html[:500])
-
-    _inspect_html_for_applicant_text(html)
-    _inspect_possible_result_blocks(html)
-    _inspect_table_cells(html)
-
-    page_records = _parse_records_from_html(html, test_url)
-
-    print(f"\nParsed {len(page_records)} records from this page.")
-
-    print("\nFirst 5 parsed records:")
-    for record in page_records[:5]:
-        print(record)
-    
-    save_data(page_records)
+    save_data(records)
 
     loaded_records = load_data()
 
