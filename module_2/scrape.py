@@ -10,6 +10,7 @@ This file contains the scraping logic for collecting public
  -checks robots.txt with urllib.robotparser
  """
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -249,6 +250,7 @@ def _inspect_table_cells(html: str) -> None:
             break
 
     print(f"\nPrinted {printed_count} applicant rows with cells.")
+
 def _clean_text(text: str | None) -> str:
     """
     Normalize whitespace in scraped text.
@@ -430,7 +432,21 @@ def _parse_records_from_html(html: str, page_url: str) -> list[dict[str, str | N
         index += 1
 
     return records
+def save_data(data: list[dict[str, str | None]], path: Path = OUTPUT_PATH) -> None:
+    """
+    Save applicant records to a JSON file.
+    """
+    with path.open("w", encoding="utf-8") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
 
+
+def load_data(path: Path = OUTPUT_PATH) -> list[dict[str, str | None]]:
+    """
+    Load applicant records from a JSON file.
+    """
+    with path.open("r", encoding="utf-8") as file:
+        return json.load(file)
+    
 def main() -> None:
     """
     Small test to confirm that URL building, robots.txt checking,
@@ -469,6 +485,12 @@ def main() -> None:
     print("\nFirst 5 parsed records:")
     for record in page_records[:5]:
         print(record)
+    
+    save_data(page_records)
+
+    loaded_records = load_data()
+
+    print(f"\nSaved and loaded {len(loaded_records)} records from {OUTPUT_PATH}.")
 
 if __name__ == "__main__":
     main()
