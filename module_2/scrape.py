@@ -10,6 +10,7 @@ This file contains the scraping logic for collecting public
  -checks robots.txt with urllib.robotparser
  """
 
+import re
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -74,7 +75,7 @@ def _fetch_html_with_urllib(url: str) -> str | None:
     Fetch a public GradCafe page using urllib.request.
 
     Returns the HTML as a string if the request succeeds.
-    Returns None if the request fails, is blocked, or is rate-limited.
+    Returns None if the request fails, is blocked, or is rate limited
     """
     request = Request(
         url,
@@ -112,7 +113,7 @@ def _fetch_html_with_urllib(url: str) -> str | None:
 def _inspect_html_for_applicant_text(html: str) -> None:
     """
     Use BeautifulSoup to inspect whether the fetched HTML appears to contain
-    applicant result information.
+    applicant result information
     """
     soup = BeautifulSoup(html, "lxml")
     page_text = soup.get_text(" ", strip=True)
@@ -139,10 +140,72 @@ def _inspect_html_for_applicant_text(html: str) -> None:
             print(snippet)
             break
 
+def _inspect_possible_result_blocks(html: str) -> None:
+    """
+    Print likely applicant result blocks so we can understand the page structure
+    before writing the parser.
+    """
+    soup = BeautifulSoup(html, "lxml")
+
+    possible_blocks = soup.find_all(["div", "tr", "article", "li"])
+
+    print("\nPossible applicant result blocks:")
+
+    count = 0
+
+    for block in possible_blocks:
+        text = block.get_text(" ", strip=True)
+
+        if not text:
+            continue
+
+        lower_text = text.lower()
+
+        # Skip search/filter panel text.
+        if "select a degree type" in lower_text or "apply filters" in lower_text:
+            continue
+
+        has_decision = (
+            "accepted on" in lower_text
+            or "rejected on" in lower_text
+            or "wait listed on" in lower_text
+            or "waitlisted on" in lower_text
+            or "interview" in lower_text
+        )
+
+        has_degree = (
+            " phd " in f" {lower_text} "
+            or " masters " in f" {lower_text} "
+            or " psyd " in f" {lower_text} "
+            or " edd " in f" {lower_text} "
+            or " mba " in f" {lower_text} "
+            or " mfa " in f" {lower_text} "
+            or " jd " in f" {lower_text} "
+        )
+
+        has_date = re.search(
+            r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},\s+20\d{2}\b",
+            text,
+        )
+
+        reasonable_length = 40 <= len(text) <= 800
+
+        if has_decision and has_degree and has_date and reasonable_length:
+            count += 1
+            print(f"\n--- Possible block {count} ---")
+            print(f"Tag: {block.name}")
+            print(f"Class: {block.get('class')}")
+            print(f"Text: {text[:1000]}")
+
+        if count >= 10:
+            break
+
+    print(f"\nPrinted {count} possible result blocks.")
+
 def main() -> None:
     """
     Small test to confirm that URL building, robots.txt checking,
-    and one safe urllib page request work.
+    and one safe urllib page request work
     """
     parser = _load_robot_parser()
 
@@ -167,6 +230,7 @@ def main() -> None:
     print(html[:500])
 
     _inspect_html_for_applicant_text(html)
+    _inspect_possible_result_blocks(html)
 
 if __name__ == "__main__":
     main()
