@@ -202,6 +202,54 @@ def _inspect_possible_result_blocks(html: str) -> None:
 
     print(f"\nPrinted {count} possible result blocks.")
 
+def _inspect_table_cells(html: str) -> None:
+    """
+    Print the individual cells from likely applicant table rows.
+    This helps us understand whether the row data is already separated by <td> tags.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    rows = soup.find_all("tr")
+
+    print("\nInspecting table cells from applicant rows:")
+
+    printed_count = 0
+
+    for row in rows:
+        cells = row.find_all(["td", "th"])
+
+        if not cells:
+            continue
+
+        cell_texts = [cell.get_text(" ", strip=True) for cell in cells]
+        row_text = " ".join(cell_texts)
+        lower_text = row_text.lower()
+
+        # Skip table headers or filter-related rows.
+        if "select a degree type" in lower_text or "apply filters" in lower_text:
+            continue
+
+        has_decision = (
+            "accepted on" in lower_text
+            or "rejected on" in lower_text
+            or "wait listed on" in lower_text
+            or "waitlisted on" in lower_text
+            or "interview" in lower_text
+        )
+
+        if not has_decision:
+            continue
+
+        printed_count += 1
+        print(f"\n--- Row {printed_count} ---")
+
+        for index, text in enumerate(cell_texts):
+            print(f"Cell {index}: {text}")
+
+        if printed_count >= 5:
+            break
+
+    print(f"\nPrinted {printed_count} applicant rows with cells.")
+
 def main() -> None:
     """
     Small test to confirm that URL building, robots.txt checking,
@@ -231,6 +279,7 @@ def main() -> None:
 
     _inspect_html_for_applicant_text(html)
     _inspect_possible_result_blocks(html)
+    _inspect_table_cells(html)
 
 if __name__ == "__main__":
     main()
