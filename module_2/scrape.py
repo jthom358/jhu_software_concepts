@@ -249,6 +249,185 @@ def _inspect_table_cells(html: str) -> None:
             break
 
     print(f"\nPrinted {printed_count} applicant rows with cells.")
+def _clean_text(text: str | None) -> str:
+    """
+    Normalize whitespace in scraped text.
+    """
+    if text is None:
+        return ""
+
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _split_program_and_degree(program_text: str) -> tuple[str, str | None]:
+    """
+    Split a combined program/degree cell into program name and degree.
+
+    Example:
+        "Computer Science PhD" -> ("Computer Science", "PhD")
+    """
+    degree_options = ["PhD", "Masters", "PsyD", "EdD", "JD", "MBA", "MFA", "IND", "Other"]
+
+    for degree in degree_options:
+        pattern = rf"\b{re.escape(degree)}\b$"
+
+        if re.search(pattern, program_text, flags=re.IGNORECASE):
+            program_name = re.sub(pattern, "", program_text, flags=re.IGNORECASE).strip()
+            return program_name, degree
+
+    return program_text.strip(), None
+
+
+def _parse_decision(decision_text: str) -> tuple[str | None, str | None]:
+    """
+    Parse decision text into status and decision date.
+
+    Example:
+        "Accepted on Apr 17" -> ("Accepted", "Apr 17")
+    """
+    text = _clean_text(decision_text)
+
+    match = re.search(
+        r"\b(Accepted|Rejected|Wait listed|Waitlisted|Interview)\s+on\s+(.+)$",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    if not match:
+        return None, None
+
+    status = match.group(1).title()
+
+    if status == "Waitlisted":
+        status = "Wait listed"
+
+    decision_date = match.group(2).strip()
+
+    return status, decision_date
+
+
+def _extract_start_term_and_year(text: str) -> tuple[str | None, str | None]:
+    """
+    Extract start term and year from detail text.
+
+    Example:
+        "Accepted on Apr 17 Fall 2026 Other" -> ("Fall", "2026")
+    """
+    match = re.search(r"\b(Fall|Spring|Summer|Winter)\s+(20\d{2})\b", text, flags=re.IGNORECASE)
+
+    if not match:
+        return None, None
+
+    return match.group(1).title(), match.group(2)
+
+
+def _extract_student_type(text: str) -> str | None:
+    """
+    Extract applicant type when available.
+    """
+    lower_text = text.lower()
+
+    if "international" in lower_text:
+        return "International"
+
+    if "american" in lower_text:
+        return "American"
+
+    if "other" in lower_text:
+        return "Other"
+
+    return None
+
+def _extract_gpa(text: str) -> str | None:
+    """
+    Extract GPA from applicant detail text.
+
+    Example:
+        "Accepted on May 08 Fall 2026 International GPA 3.84" -> "3.84"
+    """
+    match = re.search(r"\bGPA\s+([0-4](?:\.\d{1,2})?)\b", text, flags=re.IGNORECASE)
+
+    if not match:
+        return None
+
+    return match.group(1)
+
+def _is_main_applicant_row(cells: list[str]) -> bool:
+    """
+    Check whether a row looks like the main applicant row.
+    """
+    if len(cells) < 4:
+        return False
+
+    date_pattern = r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},\s+20\d{2}\b"
+    has_added_date = re.search(date_pattern, cells[2]) is not None
+    has_decision = " on " in cells[3].lower()
+
+    return has_added_date and has_decision
+
+def _parse_first_records(html: str, limit: int = 5) -> list[dict[str, str | None]]:
+    """
+    Parse the first few applicant records from the GradCafe table.
+    This is a test version before building the full scrape_data() loop.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    rows = soup.find_all("tr")
+
+    records = []
+    index = 0
+
+    while index < len(rows) and len(records) < limit:
+        cells = [_clean_text(cell.get_text(" ", strip=True)) for cell in rows[index].find_all("td")]
+
+        if not _is_main_applicant_row(cells):
+            index += 1
+            continue
+
+        university = cells[0]
+        program_name, degree = _split_program_and_degree(cells[1])
+        date_added = cells[2]
+        status, decision_date = _parse_decision(cells[3])
+        comments = cells[4] if len(cells) > 4 else None
+
+        detail_text = ""
+
+        if index + 1 < len(rows):
+            next_cells = [
+                _clean_text(cell.get_text(" ", strip=True))
+                for cell in rows[index + 1].find_all("td")
+            ]
+
+            if len(next_cells) == 1:
+                detail_text = next_cells[0]
+
+        start_term, start_year = _extract_start_term_and_year(detail_text)
+        student_type = _extract_student_type(detail_text)
+        gpa = _extract_gpa(detail_text)
+
+        record = {
+            "university_raw": university,
+            "program_name_raw": program_name,
+            "degree": degree,
+            "date_added": date_added,
+            "entry_url": None,
+            "applicant_status": status,
+            "acceptance_date": decision_date if status == "Accepted" else None,
+            "rejection_date": decision_date if status == "Rejected" else None,
+            "start_term": start_term,
+            "start_year": start_year,
+            "student_type": student_type,
+            "gre_score": None,
+            "gre_v_score": None,
+            "gre_aw": None,
+            "gpa": gpa,
+            "comments": comments,
+            "raw_listing_text": _clean_text(" ".join(cells + [detail_text])),
+        }
+
+        records.append(record)
+        index += 1
+
+    return records
 
 def main() -> None:
     """
@@ -280,6 +459,12 @@ def main() -> None:
     _inspect_html_for_applicant_text(html)
     _inspect_possible_result_blocks(html)
     _inspect_table_cells(html)
+
+    test_records = _parse_first_records(html, limit=5)
+
+    print("\nParsed test records:")
+    for record in test_records:
+        print(record)
 
 if __name__ == "__main__":
     main()
