@@ -226,6 +226,41 @@ def _extract_gpa(text: str) -> str | None:
 
     return match.group(1)
 
+def _extract_gre_score(text: str) -> str | None:
+    """
+    Extract total GRE score when available.
+    """
+    match = re.search(r"\bGRE\s+(\d{3})\b", text, flags=re.IGNORECASE)
+
+    if not match:
+        return None
+
+    return match.group(1)
+
+
+def _extract_gre_v_score(text: str) -> str | None:
+    """
+    Extract GRE verbal score when available.
+    """
+    match = re.search(r"\bGRE\s*V\s+(\d{2,3})\b", text, flags=re.IGNORECASE)
+
+    if not match:
+        return None
+
+    return match.group(1)
+
+
+def _extract_gre_aw_score(text: str) -> str | None:
+    """
+    Extract GRE analytical writing score when available.
+    """
+    match = re.search(r"\bGRE\s*AW\s+([0-6](?:\.\d)?)\b", text, flags=re.IGNORECASE)
+
+    if not match:
+        return None
+
+    return match.group(1)
+
 def _is_main_applicant_row(cells: list[str]) -> bool:
     """
     Check whether a row looks like the main applicant row.
@@ -279,6 +314,9 @@ def _parse_records_from_html(html: str, page_url: str) -> list[dict[str, str | N
         start_term, start_year = _extract_start_term_and_year(detail_text)
         student_type = _extract_student_type(detail_text)
         gpa = _extract_gpa(detail_text)
+        gre_score = _extract_gre_score(detail_text)
+        gre_v_score = _extract_gre_v_score(detail_text)
+        gre_aw = _extract_gre_aw_score(detail_text)
 
         record = {
             "university_raw": university,
@@ -292,9 +330,9 @@ def _parse_records_from_html(html: str, page_url: str) -> list[dict[str, str | N
             "start_term": start_term,
             "start_year": start_year,
             "student_type": student_type,
-            "gre_score": None,
-            "gre_v_score": None,
-            "gre_aw": None,
+            "gre_score": gre_score,
+            "gre_v_score": gre_v_score,
+            "gre_aw": gre_aw,
             "gpa": gpa,
             "comments": comments,
             "raw_listing_text": _clean_text(" ".join(cells + [detail_text])),
