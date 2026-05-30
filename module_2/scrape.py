@@ -12,7 +12,9 @@ This file contains the scraping logic for collecting public
 
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urljoin
+from urllib.request import Request, urlopen
 from urllib.robotparser import RobotFileParser
 
 BASE_URL = "https://www.thegradcafe.com"
@@ -32,7 +34,7 @@ def _build_survey_url(page: int = 1, program: str | None = None) -> str:
     program: Optional program search term
     
     Returns:
-    A complete GradCafe survey URL.
+    A complete GradCafe survey URL
     """
     query_params: dict[str, Any] = {}
 
@@ -52,7 +54,7 @@ def _build_survey_url(page: int = 1, program: str | None = None) -> str:
 
 def _load_robot_parser() -> RobotFileParser:
     """
-    Load and parse GradCafe robots.txt using urllib.robotparser.
+    Load and parse GradCafe robots.txt using urllib.robotparser
     """
     parser = RobotFileParser()
     parser.set_url(ROBOTS_URL)
@@ -62,14 +64,54 @@ def _load_robot_parser() -> RobotFileParser:
 
 def _can_fetch(url: str, parser: RobotFileParser) -> bool:
     """
-    Check whether robots.txt permits this scraper to fetch the provided URL.
+    Check whether robots.txt permits this scraper to fetch the provided URL
     """
     return parser.can_fetch(USER_AGENT, url)
 
+def _fetch_html_with_urllib(url: str) -> str | None:
+    """
+    Fetch a public GradCafe page using urllib.request.
+
+    Returns the HTML as a string if the request succeeds.
+    Returns None if the request fails, is blocked, or is rate-limited.
+    """
+    request = Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml",
+        },
+    )
+
+    try:
+        with urlopen(request, timeout=30) as response:
+            status_code = response.status
+
+            if status_code in {403, 429}:
+                print(f"Stopped: site returned status code {status_code}.")
+                return None
+
+            raw_bytes = response.read()
+            html = raw_bytes.decode("utf-8", errors="replace")
+
+            return html
+
+    except HTTPError as error:
+        print(f"HTTP error while fetching {url}: {error.code}")
+
+        if error.code in {403, 429}:
+            print("Stopping because the site blocked or rate-limited the request.")
+
+        return None
+
+    except URLError as error:
+        print(f"URL error while fetching {url}: {error}")
+        return None
 
 def main() -> None:
     """
-    Small test to confirm that URL building and robots.txt checking work.
+    Small test to confirm that URL building, robots.txt checking,
+    and one safe urllib page request work.
     """
     parser = _load_robot_parser()
 
@@ -79,6 +121,19 @@ def main() -> None:
     print(f"Test survey URL: {test_url}")
     print(f"Allowed by robots.txt: {_can_fetch(test_url, parser)}")
 
+    if not _can_fetch(test_url, parser):
+        print("Stopping because robots.txt does not allow this URL.")
+        return
+
+    html = _fetch_html_with_urllib(test_url)
+
+    if html is None:
+        print("No HTML was fetched.")
+        return
+
+    print(f"Fetched HTML length: {len(html)} characters")
+    print("First 500 characters:")
+    print(html[:500])
 
 if __name__ == "__main__":
     main()
