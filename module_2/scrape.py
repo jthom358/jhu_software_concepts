@@ -16,6 +16,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urljoin
 from urllib.request import Request, urlopen
 from urllib.robotparser import RobotFileParser
+from bs4 import BeautifulSoup
 
 BASE_URL = "https://www.thegradcafe.com"
 SURVEY_PATH = "/survey/"
@@ -107,6 +108,36 @@ def _fetch_html_with_urllib(url: str) -> str | None:
     except URLError as error:
         print(f"URL error while fetching {url}: {error}")
         return None
+    
+def _inspect_html_for_applicant_text(html: str) -> None:
+    """
+    Use BeautifulSoup to inspect whether the fetched HTML appears to contain
+    applicant result information.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    page_text = soup.get_text(" ", strip=True)
+
+    search_terms = ["Accepted", "Rejected", "Waitlisted", "GPA", "GRE", "PhD", "Masters"]
+
+    print("\nHTML inspection:")
+    print(f"Total visible text length: {len(page_text)} characters")
+
+    for term in search_terms:
+        count = page_text.count(term)
+        print(f"Occurrences of '{term}': {count}")
+
+    print("\nSample text around applicant-related terms:")
+
+    for term in search_terms:
+        index = page_text.find(term)
+
+        if index != -1:
+            start = max(index - 150, 0)
+            end = min(index + 350, len(page_text))
+            snippet = page_text[start:end]
+            print(f"\n--- Around '{term}' ---")
+            print(snippet)
+            break
 
 def main() -> None:
     """
@@ -134,6 +165,8 @@ def main() -> None:
     print(f"Fetched HTML length: {len(html)} characters")
     print("First 500 characters:")
     print(html[:500])
+
+    _inspect_html_for_applicant_text(html)
 
 if __name__ == "__main__":
     main()
