@@ -29,9 +29,9 @@ ROBOTS_URL = urljoin(BASE_URL, "/robots.txt")
 OUTPUT_PATH = Path("applicant_data.json")
 
 USER_AGENT = "jhu-software-concepts-student-scraper/1.0"
-MIN_DELAY_SECONDS = 1.5
-MAX_DELAY_SECONDS = 3.5
-TARGET_RECORDS = 2000
+MIN_DELAY_SECONDS = 2
+MAX_DELAY_SECONDS = 3
+TARGET_RECORDS = 30000
 
 def _build_survey_url(page: int = 1, program: str | None = None) -> str:
     """
@@ -83,12 +83,12 @@ def _can_fetch(url: str, parser: RobotFileParser) -> bool:
     """
     return parser.can_fetch(USER_AGENT, url)
 
-def _fetch_html_with_urllib(url: str) -> str | None:
+def _fetch_html_with_urllib(url: str, max_attempts: int = 3) -> str | None:
     """
     Fetch a public GradCafe page using urllib.request.
 
     Returns the HTML as a string if the request succeeds.
-    Returns None if the request fails, is blocked, or is rate limited
+    Returns None if the request fails, is blocked, or is rate-limited.
     """
     request = Request(
         url,
@@ -98,30 +98,41 @@ def _fetch_html_with_urllib(url: str) -> str | None:
         },
     )
 
-    try:
-        with urlopen(request, timeout=30) as response:
-            status_code = response.status
+    for attempt in range(1, max_attempts + 1):
+        try:
+            with urlopen(request, timeout=30) as response:
+                status_code = response.status
 
-            if status_code in {403, 429}:
-                print(f"Stopped: site returned status code {status_code}.")
+                if status_code in {403, 429}:
+                    print(f"Stopped: site returned status code {status_code}.")
+                    return None
+
+                raw_bytes = response.read()
+                html = raw_bytes.decode("utf-8", errors="replace")
+
+                return html
+
+        except HTTPError as error:
+            print(f"HTTP error while fetching {url}: {error.code}")
+
+            if error.code in {403, 429}:
+                print("Stopping because the site blocked or rate-limited the request.")
                 return None
 
-            raw_bytes = response.read()
-            html = raw_bytes.decode("utf-8", errors="replace")
+            return None
 
-            return html
+        except (URLError, TimeoutError) as error:
+            print(f"URL or timeout error while fetching {url}: {error}")
 
-    except HTTPError as error:
-        print(f"HTTP error while fetching {url}: {error.code}")
+            if attempt < max_attempts:
+                wait_seconds = 10 * attempt
+                print(f"Temporary fetch issue. Retrying in {wait_seconds} seconds...")
+                time.sleep(wait_seconds)
+            else:
+                print("Stopping because all retry attempts failed.")
+                return None
 
-        if error.code in {403, 429}:
-            print("Stopping because the site blocked or rate-limited the request.")
-
-        return None
-
-    except URLError as error:
-        print(f"URL error while fetching {url}: {error}")
-        return None
+    return None
 
 def _clean_text(text: str | None) -> str:
     """
@@ -346,10 +357,19 @@ def _parse_records_from_html(html: str, page_url: str) -> list[dict[str, str | N
 def scrape_data(target_records: int = TARGET_RECORDS) -> list[dict[str, str | None]]:
     """
     Scrape GradCafe applicant records from multiple public survey pages.
+    Resumes from existing applicant_data.json if present.
     """
     parser = _load_robot_parser()
-    records = []
-    page = 1
+    records = _load_existing_records()
+
+    if records:
+        print(f"Loaded {len(records)} existing records from checkpoint.")
+    else:
+        print("No existing checkpoint found. Starting from page 1.")
+
+    # GradCafe currently shows 20 records per page.
+    start_page = (len(records) // 20) + 1
+    page = start_page
 
     while len(records) < target_records:
         page_url = _build_survey_url(page=page)
@@ -377,6 +397,9 @@ def scrape_data(target_records: int = TARGET_RECORDS) -> list[dict[str, str | No
         print(f"Found {len(page_records)} records on page {page}.")
         print(f"Total records collected: {len(records)}")
 
+        save_data(records)
+        print(f"Checkpoint saved with {len(records)} records.")
+
         page += 1
 
         if len(records) < target_records:
@@ -398,6 +421,16 @@ def load_data(path: Path = OUTPUT_PATH) -> list[dict[str, str | None]]:
     """
     with path.open("r", encoding="utf-8") as file:
         return json.load(file)
+    
+def _load_existing_records(path: Path = OUTPUT_PATH) -> list[dict[str, str | None]]:
+    """
+    Load existing records if applicant_data.json already exists.
+    Otherwise return an empty list.
+    """
+    if not path.exists():
+        return []
+
+    return load_data(path)
     
 def main() -> None:
     """
