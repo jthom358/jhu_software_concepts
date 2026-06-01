@@ -2,4 +2,5 @@ module_1/.venv/
 __pycache__/
 *.pyc
 .DS_Store
-.env
+.envmodule_2/llm_hosting/models/
+module_2/llm_hosting/models/
