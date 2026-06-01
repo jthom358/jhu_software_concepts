@@ -177,29 +177,25 @@ This file contains the full 30,000 cleaned pre-LLM records.
 
 The provided local LLM files are included under:
 
-```text
-module_2/llm_hosting
-```
+`module_2/llm_hosting`
 
 I installed the provided LLM requirements and successfully ran the provided TinyLlama standardizer locally. The model downloaded through Hugging Face, and the standardizer worked on the provided `sample_data.json`.
 
 The LLM app adds the following fields:
 
-```text
-llm-generated-program
-llm-generated-university
-```
+- `llm-generated-program`
+- `llm-generated-university`
 
-I then prepared my scraped data for the LLM by using `clean.py` to create the combined `program` field expected by `llm_hosting/app.py`.
+I prepared my scraped data for the LLM by using `clean.py` to create the combined `program` field expected by `llm_hosting/app.py`.
 
-The full scraped dataset contains 30,000 records. The provided local LLM standardizer processes rows one at a time on CPU, so a complete 30,000-row LLM standardization pass was too slow to complete before the submission deadline. I began running the local LLM standardizer on the cleaned dataset and saved its incremental JSONL output. The final `llm_extend_applicant_data.json` file contains the LLM-standardized records completed before final submission.
+The full scraped dataset contains 30,000 records. I created `cleaned_applicant_data.json` to prepare all 30,000 scraped records for the provided LLM app while preserving the original raw scraped fields.
+
+I then ran the local LLM standardizer on the cleaned dataset. Because the local CPU-based process handled rows one at a time, the complete 30,000-row LLM pass did not finish before the submission cutoff. I saved the incremental JSONL output and converted it into the recquired JSON format. The submitted `llm_extend_applicant_data.json` contains 21,690 LLM-standardized records with `llm-generated-program` and `llm-generated-university` fields.
 
 The original full scraped dataset and full cleaned pre-LLM dataset are preserved in:
 
-```text
-applicant_data.json
-cleaned_applicant_data.json
-```
+- `applicant_data.json`
+- `cleaned_applicant_data.json`
 
 The LLM output can be extended by rerunning the provided app with the `--out` and `--append` options.
 
@@ -284,4 +280,4 @@ All assignment materials are placed under:
 module_2
 ```
 
-The Canvas submission should include the zipped `module_2` folder and should match the final pushed GitHub version.
+The Canvas submission should include the zipped `module_2` folder and also should match the final pushed GitHub version
