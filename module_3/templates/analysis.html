@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}GradCafe Analysis{% endblock %}
+
+{% block content %}
+    <div class="top-row">
+        <div>
+            <h1>GradCafe Data Analysis</h1>
+            <p>
+                These results come from SQL queries run on a PostgreSQL database
+                containing cleaned GradCafe applicant entries.
+            </p>
+        </div>
+
+        <form action="{{ url_for('index') }}" method="get">
+            <button type="submit">Update Analysis</button>
+        </form>
+    </div>
+
+    {% for item in results %}
+        <div class="result-card">
+            <h3>{{ item.question }}</h3>
+            <p><strong>Answer:</strong> {{ item.answer }}</p>
+        </div>
+    {% endfor %}
+{% endblock %}
