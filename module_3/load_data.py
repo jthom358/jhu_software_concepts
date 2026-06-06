@@ -16,7 +16,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
 def clean_float(value):
-    """Convert GPA/GRE values to floats when possible."""
+    """Convert GPA values to floats when possible."""
     if value is None or value == "":
         return None
 
@@ -24,6 +24,19 @@ def clean_float(value):
         return float(value)
     except ValueError:
         return None
+
+
+def clean_gre(value, lowest, highest):
+    """Convert GRE values to floats and remove obvious bad values."""
+    score = clean_float(value)
+
+    if score is None:
+        return None
+
+    if score < lowest or score > highest:
+        return None
+
+    return score
 
 
 def clean_date(date_string):
@@ -113,9 +126,9 @@ for i, applicant in enumerate(applicants, start=1):
         term,
         applicant.get("student_type"),
         clean_float(applicant.get("gpa")),
-        clean_float(applicant.get("gre_score")),
-        clean_float(applicant.get("gre_v_score")),
-        clean_float(applicant.get("gre_aw")),
+        clean_gre(applicant.get("gre_score"), 130, 170),
+        clean_gre(applicant.get("gre_v_score"), 130, 170),
+        clean_gre(applicant.get("gre_aw"), 0, 6),
         applicant.get("degree"),
         applicant.get("llm-generated-program"),
         applicant.get("llm-generated-university"),
