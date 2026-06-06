@@ -10,11 +10,35 @@
                 These results come from SQL queries run on a PostgreSQL database
                 containing cleaned GradCafe applicant entries.
             </p>
+
+            <p class="helper-text">
+                Pull Data checks GradCafe for recent applicant records and adds
+                any records that are not already in the database. Update Analysis
+                refreshes the page using the latest database results.
+            </p>
+
+            {% if scraping_running %}
+                <p class="warning">Pull Data is currently running. Please wait before updating analysis.</p>
+            {% endif %}
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <p class="message">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
         </div>
 
-        <form action="{{ url_for('index') }}" method="get">
-            <button type="submit">Update Analysis</button>
-        </form>
+        <div class="button-column">
+            <form action="{{ url_for('update_analysis') }}" method="post">
+                <button type="submit">Update Analysis</button>
+            </form>
+
+            <form action="{{ url_for('pull_data') }}" method="post">
+                <button type="submit">Pull Data</button>
+            </form>
+        </div>
     </div>
 
     {% for item in results %}

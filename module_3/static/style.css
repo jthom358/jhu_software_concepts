@@ -55,3 +55,28 @@ button {
 button:hover {
     background-color: #163a59;
 }
+
+.button-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.helper-text {
+    color: #555;
+    max-width: 700px;
+}
+
+.message {
+    background-color: #eef6ff;
+    padding: 10px;
+    border-left: 4px solid #1f4e79;
+    border-radius: 4px;
+}
+
+.warning {
+    background-color: #fff3cd;
+    padding: 10px;
+    border-left: 4px solid #b58105;
+    border-radius: 4px;
+}
