@@ -7,3 +7,6 @@ module_2/llm_hosting/models/
 .env
 *.env
 module_3/.env
+# Coverage local database
+.coverage
+module_4/.coverage
