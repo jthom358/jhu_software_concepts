@@ -1,0 +1,9 @@
+[run]
+omit =
+    src/scrape.py
+
+[report]
+exclude_lines =
+    if __name__ == .__main__.:
+    def main\(.*\):
+    raise RuntimeError
