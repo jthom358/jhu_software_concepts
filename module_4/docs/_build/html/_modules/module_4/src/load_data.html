@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>module_4.src.load_data &mdash; Grad Cafe Analytics Module 4 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Grad Cafe Analytics Module 4
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../setup.html">Setup and Running the Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../testing.html">Testing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../operational_notes.html">Operational Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Grad Cafe Analytics Module 4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">module_4.src.load_data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for module_4.src.load_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Create and load the GradCafe PostgreSQL applicants table.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.db_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect</span>
+
+<span class="n">BASE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">DATA_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;llm_extend_applicant_data.json&quot;</span><span class="p">)</span>
+
+<span class="n">REQUIRED_FIELDS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;p_id&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;program&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;comments&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;date_added&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;url&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;status&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;term&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;us_or_international&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gpa&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gre&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gre_v&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gre_aw&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;degree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;llm_generated_program&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;llm_generated_university&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="clean_float">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.clean_float">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_float</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert GPA and score values to floats when possible.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="clean_gre">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.clean_gre">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_gre</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">lowest</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">highest</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert GRE values to floats and remove values outside the expected range.&quot;&quot;&quot;</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">clean_float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">score</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">score</span> <span class="o">&lt;</span> <span class="n">lowest</span> <span class="ow">or</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">highest</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">score</span></div>
+
+
+
+<div class="viewcode-block" id="clean_date">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.clean_date">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_date</span><span class="p">(</span><span class="n">date_string</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">date</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert GradCafe date strings such as ``May 29, 2026`` to dates.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date_string</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">date_string</span>
+    <span class="k">if</span> <span class="n">date_string</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">date_string</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">fmt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;%b </span><span class="si">%d</span><span class="s2">, %Y&quot;</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">date_string</span><span class="p">),</span> <span class="n">fmt</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">continue</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="build_term">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.build_term">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_term</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a term string such as ``Fall 2026`` from a scraped record.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;term&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;term&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_term&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_year&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_term&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_year&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="build_program">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.build_program">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_program</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the Module 3 ``program`` field from cleaned or scraped values.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;program&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;program&quot;</span><span class="p">)</span>
+
+    <span class="n">program_name</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;program_name_raw&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;llm-generated-program&quot;</span><span class="p">)</span>
+    <span class="n">university</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;university_raw&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;llm-generated-university&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">program_name</span> <span class="ow">and</span> <span class="n">university</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">program_name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">university</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="n">program_name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">program_name</span>
+    <span class="k">if</span> <span class="n">university</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">university</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="normalize_record">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.normalize_record">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_record</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">p_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize one JSON/scraped record into the required applicants schema.&quot;&quot;&quot;</span>
+    <span class="n">program</span> <span class="o">=</span> <span class="n">build_program</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">program</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;p_id&quot;</span><span class="p">:</span> <span class="n">p_id</span><span class="p">,</span>
+        <span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="n">program</span><span class="p">,</span>
+        <span class="s2">&quot;comments&quot;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;comments&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;date_added&quot;</span><span class="p">:</span> <span class="n">clean_date</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;date_added&quot;</span><span class="p">)),</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entry_url&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;applicant_status&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;term&quot;</span><span class="p">:</span> <span class="n">build_term</span><span class="p">(</span><span class="n">record</span><span class="p">),</span>
+        <span class="s2">&quot;us_or_international&quot;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;student_type&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;us_or_international&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;gpa&quot;</span><span class="p">:</span> <span class="n">clean_float</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gpa&quot;</span><span class="p">)),</span>
+        <span class="s2">&quot;gre&quot;</span><span class="p">:</span> <span class="n">clean_gre</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gre_score&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gre&quot;</span><span class="p">),</span> <span class="mi">130</span><span class="p">,</span> <span class="mi">170</span><span class="p">),</span>
+        <span class="s2">&quot;gre_v&quot;</span><span class="p">:</span> <span class="n">clean_gre</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gre_v_score&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gre_v&quot;</span><span class="p">),</span> <span class="mi">130</span><span class="p">,</span> <span class="mi">170</span><span class="p">),</span>
+        <span class="s2">&quot;gre_aw&quot;</span><span class="p">:</span> <span class="n">clean_gre</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gre_aw&quot;</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="s2">&quot;degree&quot;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;degree&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;llm_generated_program&quot;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;llm-generated-program&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;llm_generated_program&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;program_name_raw&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;llm_generated_university&quot;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;llm-generated-university&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;llm_generated_university&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;university_raw&quot;</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="create_applicants_table">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.create_applicants_table">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_applicants_table</span><span class="p">(</span><span class="n">database_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">drop_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create the applicants table and uniqueness index used by tests and the app.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">connect</span><span class="p">(</span><span class="n">database_url</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">drop_existing</span><span class="p">:</span>
+                <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;DROP TABLE IF EXISTS applicants;&quot;</span><span class="p">)</span>
+            <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                CREATE TABLE IF NOT EXISTS applicants (</span>
+<span class="sd">                    p_id INTEGER PRIMARY KEY,</span>
+<span class="sd">                    program TEXT NOT NULL,</span>
+<span class="sd">                    comments TEXT,</span>
+<span class="sd">                    date_added DATE,</span>
+<span class="sd">                    url TEXT,</span>
+<span class="sd">                    status TEXT,</span>
+<span class="sd">                    term TEXT,</span>
+<span class="sd">                    us_or_international TEXT,</span>
+<span class="sd">                    gpa FLOAT,</span>
+<span class="sd">                    gre FLOAT,</span>
+<span class="sd">                    gre_v FLOAT,</span>
+<span class="sd">                    gre_aw FLOAT,</span>
+<span class="sd">                    degree TEXT,</span>
+<span class="sd">                    llm_generated_program TEXT,</span>
+<span class="sd">                    llm_generated_university TEXT</span>
+<span class="sd">                );</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+            <span class="p">)</span>
+            <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                CREATE UNIQUE INDEX IF NOT EXISTS applicants_unique_record_idx</span>
+<span class="sd">                ON applicants (</span>
+<span class="sd">                    COALESCE(program, &#39;&#39;),</span>
+<span class="sd">                    COALESCE(date_added, DATE &#39;1900-01-01&#39;),</span>
+<span class="sd">                    COALESCE(status, &#39;&#39;),</span>
+<span class="sd">                    COALESCE(degree, &#39;&#39;)</span>
+<span class="sd">                );</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="next_applicant_id">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.next_applicant_id">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">next_applicant_id</span><span class="p">(</span><span class="n">cur</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the next integer primary key for applicants.&quot;&quot;&quot;</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT COALESCE(MAX(p_id), 0) + 1 FROM applicants;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="insert_applicants">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.insert_applicants">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">insert_applicants</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">database_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Insert records into PostgreSQL without duplicating likely duplicate applicants.&quot;&quot;&quot;</span>
+    <span class="n">create_applicants_table</span><span class="p">(</span><span class="n">database_url</span><span class="p">)</span>
+    <span class="n">inserted</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">with</span> <span class="n">connect</span><span class="p">(</span><span class="n">database_url</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+            <span class="n">p_id</span> <span class="o">=</span> <span class="n">next_applicant_id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">source_record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+                <span class="n">record</span> <span class="o">=</span> <span class="n">normalize_record</span><span class="p">(</span><span class="n">source_record</span><span class="p">,</span> <span class="n">p_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<span class="w">                    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    INSERT INTO applicants (</span>
+<span class="sd">                        p_id, program, comments, date_added, url, status, term,</span>
+<span class="sd">                        us_or_international, gpa, gre, gre_v, gre_aw, degree,</span>
+<span class="sd">                        llm_generated_program, llm_generated_university</span>
+<span class="sd">                    )</span>
+<span class="sd">                    SELECT %(p_id)s, %(program)s, %(comments)s, %(date_added)s, %(url)s,</span>
+<span class="sd">                           %(status)s, %(term)s, %(us_or_international)s, %(gpa)s,</span>
+<span class="sd">                           %(gre)s, %(gre_v)s, %(gre_aw)s, %(degree)s,</span>
+<span class="sd">                           %(llm_generated_program)s, %(llm_generated_university)s</span>
+<span class="sd">                    WHERE NOT EXISTS (</span>
+<span class="sd">                        SELECT 1 FROM applicants</span>
+<span class="sd">                        WHERE COALESCE(program, &#39;&#39;) = COALESCE(%(program)s, &#39;&#39;)</span>
+<span class="sd">                          AND COALESCE(date_added, DATE &#39;1900-01-01&#39;) = COALESCE(%(date_added)s, DATE &#39;1900-01-01&#39;)</span>
+<span class="sd">                          AND COALESCE(status, &#39;&#39;) = COALESCE(%(status)s, &#39;&#39;)</span>
+<span class="sd">                          AND COALESCE(degree, &#39;&#39;) = COALESCE(%(degree)s, &#39;&#39;)</span>
+<span class="sd">                    );</span>
+<span class="sd">                    &quot;&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">record</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">cur</span><span class="o">.</span><span class="n">rowcount</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">inserted</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">p_id</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">inserted</span></div>
+
+
+
+<div class="viewcode-block" id="load_json_records">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.load_json_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_json_records</span><span class="p">(</span><span class="n">data_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DATA_FILE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read applicant records from a JSON file.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="load_initial_data">
+<a class="viewcode-back" href="../../../api.html#module_4.src.load_data.load_initial_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_initial_data</span><span class="p">(</span><span class="n">database_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">data_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DATA_FILE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Drop, recreate, and load the applicants table from the Module 3 JSON file.&quot;&quot;&quot;</span>
+    <span class="n">create_applicants_table</span><span class="p">(</span><span class="n">database_url</span><span class="p">,</span> <span class="n">drop_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">insert_applicants</span><span class="p">(</span><span class="n">load_json_records</span><span class="p">(</span><span class="n">data_file</span><span class="p">),</span> <span class="n">database_url</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">load_initial_data</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> applicant records into the applicants table.&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

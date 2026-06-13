@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; Grad Cafe Analytics Module 4 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Operational Notes" href="operational_notes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Grad Cafe Analytics Module 4
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup and Running the Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operational_notes.html">Operational Notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-module_4.src.app">Flask app</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.app.create_app"><code class="docutils literal notranslate"><span class="pre">create_app()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-module_4.src.db_utils">Database utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.db_utils.connect"><code class="docutils literal notranslate"><span class="pre">connect()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.db_utils.get_database_url"><code class="docutils literal notranslate"><span class="pre">get_database_url()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-module_4.src.load_data">Data loading</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.build_program"><code class="docutils literal notranslate"><span class="pre">build_program()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.build_term"><code class="docutils literal notranslate"><span class="pre">build_term()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.clean_date"><code class="docutils literal notranslate"><span class="pre">clean_date()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.clean_float"><code class="docutils literal notranslate"><span class="pre">clean_float()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.clean_gre"><code class="docutils literal notranslate"><span class="pre">clean_gre()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.create_applicants_table"><code class="docutils literal notranslate"><span class="pre">create_applicants_table()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.insert_applicants"><code class="docutils literal notranslate"><span class="pre">insert_applicants()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.load_initial_data"><code class="docutils literal notranslate"><span class="pre">load_initial_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.load_json_records"><code class="docutils literal notranslate"><span class="pre">load_json_records()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.next_applicant_id"><code class="docutils literal notranslate"><span class="pre">next_applicant_id()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.load_data.normalize_record"><code class="docutils literal notranslate"><span class="pre">normalize_record()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-module_4.src.pull_data">Pull data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.pull_data.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.pull_data.pull_and_insert"><code class="docutils literal notranslate"><span class="pre">pull_and_insert()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-module_4.src.query_data">Query data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.query_data.format_answer"><code class="docutils literal notranslate"><span class="pre">format_answer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.query_data.get_analysis_results"><code class="docutils literal notranslate"><span class="pre">get_analysis_results()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.query_data.get_expected_keys"><code class="docutils literal notranslate"><span class="pre">get_expected_keys()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.query_data.run_query"><code class="docutils literal notranslate"><span class="pre">run_query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-module_4.src.scrape">Scraping</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.scrape.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.scrape.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.scrape.save_data"><code class="docutils literal notranslate"><span class="pre">save_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module_4.src.scrape.scrape_data"><code class="docutils literal notranslate"><span class="pre">scrape_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Grad Cafe Analytics Module 4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<section id="module-module_4.src.app">
+<span id="flask-app"></span><h2>Flask app<a class="headerlink" href="#module-module_4.src.app" title="Link to this heading"></a></h2>
+<p>Flask application factory and routes for the GradCafe analytics app.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.app.create_app">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.app.</span></span><span class="sig-name descname"><span class="pre">create_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pull_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Flask</span></span></span><a class="reference internal" href="_modules/module_4/src/app.html#create_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.app.create_app" title="Link to this definition"></a></dt>
+<dd><p>Create a testable Flask app with injectable pull and query functions.</p>
+</dd></dl>
+
+</section>
+<section id="module-module_4.src.db_utils">
+<span id="database-utilities"></span><h2>Database utilities<a class="headerlink" href="#module-module_4.src.db_utils" title="Link to this heading"></a></h2>
+<p>Shared PostgreSQL utilities for the GradCafe application.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.db_utils.connect">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.db_utils.</span></span><span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/module_4/src/db_utils.html#connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.db_utils.connect" title="Link to this definition"></a></dt>
+<dd><p>Create a psycopg connection using DATABASE_URL-compatible settings.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.db_utils.get_database_url">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.db_utils.</span></span><span class="sig-name descname"><span class="pre">get_database_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/module_4/src/db_utils.html#get_database_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.db_utils.get_database_url" title="Link to this definition"></a></dt>
+<dd><p>Return a PostgreSQL connection URL from an argument or environment variables.</p>
+</dd></dl>
+
+</section>
+<section id="module-module_4.src.load_data">
+<span id="data-loading"></span><h2>Data loading<a class="headerlink" href="#module-module_4.src.load_data" title="Link to this heading"></a></h2>
+<p>Create and load the GradCafe PostgreSQL applicants table.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.build_program">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">build_program</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#build_program"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.build_program" title="Link to this definition"></a></dt>
+<dd><p>Build the Module 3 <code class="docutils literal notranslate"><span class="pre">program</span></code> field from cleaned or scraped values.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.build_term">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">build_term</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#build_term"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.build_term" title="Link to this definition"></a></dt>
+<dd><p>Build a term string such as <code class="docutils literal notranslate"><span class="pre">Fall</span> <span class="pre">2026</span></code> from a scraped record.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.clean_date">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">clean_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">date</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#clean_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.clean_date" title="Link to this definition"></a></dt>
+<dd><p>Convert GradCafe date strings such as <code class="docutils literal notranslate"><span class="pre">May</span> <span class="pre">29,</span> <span class="pre">2026</span></code> to dates.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.clean_float">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">clean_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#clean_float"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.clean_float" title="Link to this definition"></a></dt>
+<dd><p>Convert GPA and score values to floats when possible.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.clean_gre">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">clean_gre</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#clean_gre"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.clean_gre" title="Link to this definition"></a></dt>
+<dd><p>Convert GRE values to floats and remove values outside the expected range.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.create_applicants_table">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">create_applicants_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_existing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#create_applicants_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.create_applicants_table" title="Link to this definition"></a></dt>
+<dd><p>Create the applicants table and uniqueness index used by tests and the app.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.insert_applicants">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">insert_applicants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">records</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#insert_applicants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.insert_applicants" title="Link to this definition"></a></dt>
+<dd><p>Insert records into PostgreSQL without duplicating likely duplicate applicants.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.load_initial_data">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">load_initial_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'C:\\Users\\jctho\\Desktop\\jhu_software_concepts\\module_4\\src\\data\\llm_extend_applicant_data.json'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#load_initial_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.load_initial_data" title="Link to this definition"></a></dt>
+<dd><p>Drop, recreate, and load the applicants table from the Module 3 JSON file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.load_json_records">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">load_json_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'C:\\Users\\jctho\\Desktop\\jhu_software_concepts\\module_4\\src\\data\\llm_extend_applicant_data.json'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#load_json_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.load_json_records" title="Link to this definition"></a></dt>
+<dd><p>Read applicant records from a JSON file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.next_applicant_id">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">next_applicant_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cur</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#next_applicant_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.next_applicant_id" title="Link to this definition"></a></dt>
+<dd><p>Return the next integer primary key for applicants.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.load_data.normalize_record">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.load_data.</span></span><span class="sig-name descname"><span class="pre">normalize_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/load_data.html#normalize_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.load_data.normalize_record" title="Link to this definition"></a></dt>
+<dd><p>Normalize one JSON/scraped record into the required applicants schema.</p>
+</dd></dl>
+
+</section>
+<section id="module-module_4.src.pull_data">
+<span id="pull-data"></span><h2>Pull data<a class="headerlink" href="#module-module_4.src.pull_data" title="Link to this heading"></a></h2>
+<p>Pull recent GradCafe data and insert only new rows into PostgreSQL.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.pull_data.main">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.pull_data.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/pull_data.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.pull_data.main" title="Link to this definition"></a></dt>
+<dd><p>Run a small pull from the command line.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.pull_data.pull_and_insert">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.pull_data.</span></span><span class="sig-name descname"><span class="pre">pull_and_insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">database_url:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">*,</span> <span class="pre">scraper:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">list[dict]]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">scrape_data&gt;,</span> <span class="pre">target_records:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">25</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/module_4/src/pull_data.html#pull_and_insert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.pull_data.pull_and_insert" title="Link to this definition"></a></dt>
+<dd><p>Scrape recent GradCafe records and insert new records into the database.</p>
+</dd></dl>
+
+</section>
+<section id="module-module_4.src.query_data">
+<span id="query-data"></span><h2>Query data<a class="headerlink" href="#module-module_4.src.query_data" title="Link to this heading"></a></h2>
+<p>SQL analysis queries for the GradCafe applicants table.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.query_data.format_answer">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.query_data.</span></span><span class="sig-name descname"><span class="pre">format_answer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/module_4/src/query_data.html#format_answer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.query_data.format_answer" title="Link to this definition"></a></dt>
+<dd><p>Format SQL answers, forcing percentages to use exactly two decimals.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.query_data.get_analysis_results">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.query_data.</span></span><span class="sig-name descname"><span class="pre">get_analysis_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">database_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/module_4/src/query_data.html#get_analysis_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.query_data.get_analysis_results" title="Link to this definition"></a></dt>
+<dd><p>Run the Module 3 analysis queries and return results for the Flask template.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.query_data.get_expected_keys">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.query_data.</span></span><span class="sig-name descname"><span class="pre">get_expected_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/module_4/src/query_data.html#get_expected_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.query_data.get_expected_keys" title="Link to this definition"></a></dt>
+<dd><p>Return the keys every analysis result dictionary should contain.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.query_data.run_query">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.query_data.</span></span><span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cur</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sql</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/module_4/src/query_data.html#run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.query_data.run_query" title="Link to this definition"></a></dt>
+<dd><p>Run one SQL query and return a template-ready result dictionary.</p>
+</dd></dl>
+
+</section>
+<section id="module-module_4.src.scrape">
+<span id="scraping"></span><h2>Scraping<a class="headerlink" href="#module-module_4.src.scrape" title="Link to this heading"></a></h2>
+<p>”
+Module 2 GradCafe scraper</p>
+<dl>
+<dt>This file contains the scraping logic for collecting public</dt><dd><p>GradCafe graduate admissions applicant data and saving it to applicant_data.json</p>
+<p>Current version:
+-Defines constants
+-Builds GradCafe URLs with urllib
+-checks robots.txt with urllib.robotparser</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.scrape.load_data">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.scrape.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">WindowsPath('data/new_applicant_data.json')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/module_4/src/scrape.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.scrape.load_data" title="Link to this definition"></a></dt>
+<dd><p>Load applicant records from a JSON file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.scrape.main">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.scrape.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/scrape.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.scrape.main" title="Link to this definition"></a></dt>
+<dd><p>Run a small multi-page scrape test and save the records to applicant_data.json.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.scrape.save_data">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.scrape.</span></span><span class="sig-name descname"><span class="pre">save_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">WindowsPath('data/new_applicant_data.json')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/module_4/src/scrape.html#save_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.scrape.save_data" title="Link to this definition"></a></dt>
+<dd><p>Save applicant records to a JSON file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="module_4.src.scrape.scrape_data">
+<span class="sig-prename descclassname"><span class="pre">module_4.src.scrape.</span></span><span class="sig-name descname"><span class="pre">scrape_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_records</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/module_4/src/scrape.html#scrape_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#module_4.src.scrape.scrape_data" title="Link to this definition"></a></dt>
+<dd><p>Scrape GradCafe applicant records from multiple public survey pages.
+Resumes from existing applicant_data.json if present.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="operational_notes.html" class="btn btn-neutral float-left" title="Operational Notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

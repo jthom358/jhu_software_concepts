@@ -1,0 +1,229 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>module_4.src.query_data &mdash; Grad Cafe Analytics Module 4 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Grad Cafe Analytics Module 4
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../setup.html">Setup and Running the Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../testing.html">Testing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../operational_notes.html">Operational Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Grad Cafe Analytics Module 4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">module_4.src.query_data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for module_4.src.query_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;SQL analysis queries for the GradCafe applicants table.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.db_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect</span>
+
+<span class="n">EXPECTED_RESULT_KEYS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;question&quot;</span><span class="p">,</span> <span class="s2">&quot;answer&quot;</span><span class="p">,</span> <span class="s2">&quot;sql&quot;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="run_query">
+<a class="viewcode-back" href="../../../api.html#module_4.src.query_data.run_query">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sql</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">percentage</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one SQL query and return a template-ready result dictionary.&quot;&quot;&quot;</span>
+    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;question&quot;</span><span class="p">:</span> <span class="n">question</span><span class="p">,</span> <span class="s2">&quot;answer&quot;</span><span class="p">:</span> <span class="n">format_answer</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">percentage</span><span class="o">=</span><span class="n">percentage</span><span class="p">),</span> <span class="s2">&quot;sql&quot;</span><span class="p">:</span> <span class="n">sql</span><span class="o">.</span><span class="n">strip</span><span class="p">()}</span></div>
+
+
+
+<div class="viewcode-block" id="format_answer">
+<a class="viewcode-back" href="../../../api.html#module_4.src.query_data.format_answer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_answer</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">percentage</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format SQL answers, forcing percentages to use exactly two decimals.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;N/A&quot;</span>
+    <span class="k">if</span> <span class="n">percentage</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_analysis_results">
+<a class="viewcode-back" href="../../../api.html#module_4.src.query_data.get_analysis_results">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_analysis_results</span><span class="p">(</span><span class="n">database_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the Module 3 analysis queries and return results for the Flask template.&quot;&quot;&quot;</span>
+    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">with</span> <span class="n">connect</span><span class="p">(</span><span class="n">database_url</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;1. How many entries are in the database for Fall 2026?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT COUNT(*) FROM applicants WHERE term = &#39;Fall 2026&#39;;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;2. What percentage of entries are from international students, excluding American and Other?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(100.0 * COUNT(*) FILTER (</span>
+<span class="s2">                    WHERE us_or_international NOT ILIKE &#39;American&#39;</span>
+<span class="s2">                      AND us_or_international NOT ILIKE &#39;Other&#39;</span>
+<span class="s2">                      AND us_or_international IS NOT NULL</span>
+<span class="s2">                ) / NULLIF(COUNT(*), 0), 2) FROM applicants;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">percentage</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;3. What is the average GPA of applicants who provided GPA?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(AVG(gpa)::numeric, 2) FROM applicants WHERE gpa IS NOT NULL;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;3. What is the average GRE Quant score of applicants who provided it?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(AVG(gre)::numeric, 2) FROM applicants WHERE gre IS NOT NULL;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;3. What is the average GRE Verbal score of applicants who provided it?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(AVG(gre_v)::numeric, 2) FROM applicants WHERE gre_v IS NOT NULL;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;3. What is the average GRE Analytical Writing score of applicants who provided it?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(AVG(gre_aw)::numeric, 2) FROM applicants WHERE gre_aw IS NOT NULL;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;4. What is the average GPA of American students in Fall 2026?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(AVG(gpa)::numeric, 2) FROM applicants</span>
+<span class="s2">                WHERE term = &#39;Fall 2026&#39; AND us_or_international ILIKE &#39;American&#39; AND gpa IS NOT NULL;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;5. What percent of Fall 2026 entries are acceptances?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(100.0 * COUNT(*) FILTER (WHERE status ILIKE &#39;</span><span class="si">%a</span><span class="s2">ccept%&#39;) / NULLIF(COUNT(*), 0), 2)</span>
+<span class="s2">                FROM applicants WHERE term = &#39;Fall 2026&#39;;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">percentage</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;6. What is the average GPA of Fall 2026 applicants who were accepted?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(AVG(gpa)::numeric, 2) FROM applicants</span>
+<span class="s2">                WHERE term = &#39;Fall 2026&#39; AND status ILIKE &#39;</span><span class="si">%a</span><span class="s2">ccept%&#39; AND gpa IS NOT NULL;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;7. How many entries are JHU master&#39;s applicants in Computer Science?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT COUNT(*) FROM applicants</span>
+<span class="s2">                WHERE degree ILIKE &#39;%master%&#39; AND program ILIKE &#39;</span><span class="si">%c</span><span class="s2">omputer science%&#39;</span>
+<span class="s2">                  AND (program ILIKE &#39;%johns hopkins%&#39; OR program ILIKE &#39;%jhu%&#39;);</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;8. How many 2026 acceptances are for Georgetown, MIT, Stanford, or CMU PhD Computer Science using downloaded fields?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT COUNT(*) FROM applicants</span>
+<span class="s2">                WHERE term ILIKE &#39;</span><span class="si">%2026%</span><span class="s2">&#39; AND status ILIKE &#39;</span><span class="si">%a</span><span class="s2">ccept%&#39; AND degree ILIKE &#39;%phd%&#39;</span>
+<span class="s2">                  AND program ILIKE &#39;</span><span class="si">%c</span><span class="s2">omputer science%&#39;</span>
+<span class="s2">                  AND (program ILIKE &#39;</span><span class="si">%g</span><span class="s2">eorgetown%&#39; OR program ILIKE &#39;%mit%&#39;</span>
+<span class="s2">                       OR program ILIKE &#39;%massachusetts institute of technology%&#39;</span>
+<span class="s2">                       OR program ILIKE &#39;</span><span class="si">%s</span><span class="s2">tanford%&#39; OR program ILIKE &#39;</span><span class="si">%c</span><span class="s2">arnegie mellon%&#39; OR program ILIKE &#39;</span><span class="si">%c</span><span class="s2">mu%&#39;);</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;9. Does the number change using LLM generated university and program fields?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT COUNT(*) FROM applicants</span>
+<span class="s2">                WHERE term ILIKE &#39;</span><span class="si">%2026%</span><span class="s2">&#39; AND status ILIKE &#39;</span><span class="si">%a</span><span class="s2">ccept%&#39; AND degree ILIKE &#39;%phd%&#39;</span>
+<span class="s2">                  AND llm_generated_program ILIKE &#39;</span><span class="si">%c</span><span class="s2">omputer science%&#39;</span>
+<span class="s2">                  AND (llm_generated_university ILIKE &#39;</span><span class="si">%g</span><span class="s2">eorgetown%&#39; OR llm_generated_university ILIKE &#39;%mit%&#39;</span>
+<span class="s2">                       OR llm_generated_university ILIKE &#39;%massachusetts institute of technology%&#39;</span>
+<span class="s2">                       OR llm_generated_university ILIKE &#39;</span><span class="si">%s</span><span class="s2">tanford%&#39;</span>
+<span class="s2">                       OR llm_generated_university ILIKE &#39;</span><span class="si">%c</span><span class="s2">arnegie mellon%&#39; OR llm_generated_university ILIKE &#39;</span><span class="si">%c</span><span class="s2">mu%&#39;);</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;10. My question: What is the average GPA for PhD applicants?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT ROUND(AVG(gpa)::numeric, 2) FROM applicants WHERE degree ILIKE &#39;%phd%&#39; AND gpa IS NOT NULL;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_query</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="s2">&quot;11. My question: How many Fall 2026 entries are waitlisted?&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT COUNT(*) FROM applicants WHERE term = &#39;Fall 2026&#39; AND status ILIKE &#39;%wait%&#39;;</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="get_expected_keys">
+<a class="viewcode-back" href="../../../api.html#module_4.src.query_data.get_expected_keys">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_expected_keys</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the keys every analysis result dictionary should contain.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">EXPECTED_RESULT_KEYS</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">get_analysis_results</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;question&quot;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Answer:&quot;</span><span class="p">,</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
