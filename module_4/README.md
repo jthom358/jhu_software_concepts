@@ -2,6 +2,12 @@
 
 This module builds on the GradCafe scraping project from Module 2. The cleaned GradCafe applicant data is loaded into a local PostgreSQL database, queried with SQL, and displayed on a dynamic Flask webpage.
 
+## Documentation
+
+Published Sphinx documentation is available at:
+
+https://jthom358-jhu-software-concepts.readthedocs.io/en/latest/
+
 ## Files
 
 * `load_data.py`
