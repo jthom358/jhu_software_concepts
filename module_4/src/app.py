@@ -26,7 +26,7 @@ def create_app(
     """Create a testable Flask app with injectable pull and query functions."""
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.update(
-        SECRET_KEY="module4-secret-key",
+        SECRET_KEY=os.getenv("SECRET_KEY", "dev-only-secret-key"),
         DATABASE_URL=os.getenv("DATABASE_URL"),
         TESTING=False,
         PULL_IN_PROGRESS=False,

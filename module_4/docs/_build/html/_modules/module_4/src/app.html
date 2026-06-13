@@ -103,7 +103,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a testable Flask app with injectable pull and query functions.&quot;&quot;&quot;</span>
     <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">template_folder</span><span class="o">=</span><span class="s2">&quot;templates&quot;</span><span class="p">,</span> <span class="n">static_folder</span><span class="o">=</span><span class="s2">&quot;static&quot;</span><span class="p">)</span>
     <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-        <span class="n">SECRET_KEY</span><span class="o">=</span><span class="s2">&quot;module4-secret-key&quot;</span><span class="p">,</span>
+        <span class="n">SECRET_KEY</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SECRET_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;dev-only-secret-key&quot;</span><span class="p">),</span>
         <span class="n">DATABASE_URL</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DATABASE_URL&quot;</span><span class="p">),</span>
         <span class="n">TESTING</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">PULL_IN_PROGRESS</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
