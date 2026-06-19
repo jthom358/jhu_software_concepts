@@ -191,7 +191,6 @@ def insert_applicants(
     database_url: str | None = None,
 ) -> int:
     """Insert records into PostgreSQL without duplicating likely duplicate applicants."""
-    create_applicants_table(database_url)
     inserted = 0
 
     with connect(database_url) as conn:

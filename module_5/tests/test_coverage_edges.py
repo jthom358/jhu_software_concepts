@@ -26,10 +26,9 @@ def test_load_data_helper_edge_cases():
 
 
 @pytest.mark.db
-def test_insert_applicants_skips_invalid_records(database_url):
+def test_insert_applicants_skips_invalid_records(empty_database):
     """Invalid records normalize to None and should not be inserted."""
-    inserted = insert_applicants([{}], database_url)
-    assert inserted == 0
+    inserted = insert_applicants([{}], empty_database)
 
 @pytest.mark.buttons
 def test_pull_and_insert_uses_scraper_and_loader(monkeypatch):

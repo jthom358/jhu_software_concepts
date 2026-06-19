@@ -1,12 +1,17 @@
 module_1/.venv/
+.venv/
+venv/
+
 __pycache__/
 *.pyc
 .DS_Store
-.envmodule_2/llm_hosting/models/
-module_2/llm_hosting/models/
+
 .env
 *.env
 module_3/.env
+
+module_2/llm_hosting/models/
+
 # Coverage local database
 .coverage
 module_4/.coverage

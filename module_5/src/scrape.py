@@ -26,7 +26,8 @@ BASE_URL = "https://www.thegradcafe.com"
 SURVEY_PATH = "/survey/"
 ROBOTS_URL = urljoin(BASE_URL, "/robots.txt")
 
-OUTPUT_PATH = Path("data/new_applicant_data.json")
+BASE_DIR = Path(__file__).resolve().parent
+OUTPUT_PATH = BASE_DIR / "data" / "new_applicant_data.json"
 
 USER_AGENT = "jhu-software-concepts-student-scraper/1.0"
 MIN_DELAY_SECONDS = 2
