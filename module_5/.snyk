@@ -1,0 +1,6 @@
+﻿exclude:
+  global:
+    - .venv/**
+    - .venv-*/**
+    - __pycache__/**
+    - docs/_build/**

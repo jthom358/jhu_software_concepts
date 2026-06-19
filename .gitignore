@@ -15,3 +15,7 @@ module_2/llm_hosting/models/
 # Coverage local database
 .coverage
 module_4/.coverage
+# Python package build metadata
+*.egg-info/
+build/
+dist/
