@@ -1,6 +1,7 @@
 [run]
 omit =
-    src/scrape.py
+    src/worker/etl/incremental_scraper.py
+    src/web/run.py
 
 [report]
 exclude_lines =

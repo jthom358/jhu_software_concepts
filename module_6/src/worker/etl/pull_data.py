@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Callable
 
-from .load_data import insert_applicants
-from .scrape import scrape_data
+from src.db.load_data import insert_applicants
+from src.worker.etl.incremental_scraper import scrape_data
 
 
 def pull_and_insert(

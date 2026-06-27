@@ -7,10 +7,11 @@ import os
 from datetime import date, datetime
 from typing import Any, Iterable
 
-from .db_utils import connect
+from src.db.db_utils import connect
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_FILE = os.path.join(BASE_DIR, "data", "llm_extend_applicant_data.json")
+SRC_DIR = os.path.dirname(BASE_DIR)
+DATA_FILE = os.path.join(SRC_DIR, "data", "applicant_data.json")
 
 REQUIRED_FIELDS = [
     "p_id",

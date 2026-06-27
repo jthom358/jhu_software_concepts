@@ -2,15 +2,15 @@ from datetime import date
 
 import pytest
 
-from src import pull_data
-from src.load_data import (
+from src.worker.etl import pull_data
+from src.db.load_data import (
     build_program,
     build_term,
     clean_date,
     insert_applicants,
 )
 
-from src.query_data import clamp_limit
+from src.worker.etl.query_data import clamp_limit
 
 @pytest.mark.db
 def test_load_data_helper_edge_cases():

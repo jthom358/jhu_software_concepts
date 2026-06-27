@@ -4,11 +4,11 @@ import re
 
 import pytest
 
-from src.app import create_app
-from src.load_data import insert_applicants
-from src.query_data import get_analysis_results
+from src.web.app import create_app
+from src.db.load_data import insert_applicants
+from src.worker.etl.query_data import get_analysis_results
 from tests.test_db_insert import SAMPLE_RECORDS
-from src.db_utils import connect
+from src.db.db_utils import connect
 
 
 @pytest.mark.integration

@@ -7,7 +7,7 @@ from typing import Any, Sequence
 
 from psycopg import sql
 
-from .db_utils import connect
+from src.db.db_utils import connect
 
 EXPECTED_RESULT_KEYS = {"question", "answer", "sql"}
 APPLICANTS_TABLE = "applicants"

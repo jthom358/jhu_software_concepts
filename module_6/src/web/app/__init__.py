@@ -7,8 +7,8 @@ from typing import Callable
 
 from flask import Flask, jsonify, render_template
 
-from .pull_data import pull_and_insert
-from .query_data import get_analysis_results
+from src.worker.etl.pull_data import pull_and_insert
+from src.worker.etl.query_data import get_analysis_results
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -72,9 +72,3 @@ def create_app(
         return jsonify({"ok": True, "count": len(results)}), 200
 
     return flask_app
-
-app = create_app()
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=False)

@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 import os
 
-from src.app import create_app
-from src.load_data import create_applicants_table
-from src.db_utils import connect, get_database_url
+from src.web.app import create_app
+from src.db.load_data import create_applicants_table
+from src.db.db_utils import connect, get_database_url
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def client(web_app):
 
 @pytest.fixture
 def database_url():
-    return os.getenv("TEST_DATABASE_URL", get_database_url())
+    return os.getenv("TEST_DATABASE_URL") or get_database_url()
 
 
 @pytest.fixture

@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from src.db_utils import get_database_url
-from src.load_data import (
+from src.db.db_utils import get_database_url
+from src.db.load_data import (
     build_program,
     clean_date,
     clean_float,
@@ -16,8 +16,8 @@ from src.load_data import (
     load_json_records,
     normalize_record,
 )
-from src.query_data import get_analysis_results, get_expected_keys
-from src.db_utils import connect
+from src.worker.etl.query_data import get_analysis_results, get_expected_keys
+from src.db.db_utils import connect
 
 
 SAMPLE_RECORDS = [

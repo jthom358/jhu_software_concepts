@@ -42,7 +42,7 @@ def test_pull_data_clears_busy_flag_after_loader_error(fake_results):
     def broken_pull(database_url=None):
         raise ValueError("loader failed")
 
-    from src.app import create_app
+    from src.web.app import create_app
 
     app = create_app({"TESTING": True}, pull_func=broken_pull, query_func=lambda database_url=None: fake_results)
     with pytest.raises(ValueError):

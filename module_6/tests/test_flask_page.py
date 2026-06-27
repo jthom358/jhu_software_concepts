@@ -3,7 +3,7 @@
 import pytest
 from bs4 import BeautifulSoup
 
-from src.app import create_app
+from src.web.app import create_app
 
 
 @pytest.mark.web

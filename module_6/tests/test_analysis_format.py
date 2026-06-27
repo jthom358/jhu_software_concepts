@@ -5,7 +5,7 @@ import re
 import pytest
 from bs4 import BeautifulSoup
 
-from src.query_data import format_answer
+from src.worker.etl.query_data import format_answer
 
 
 @pytest.mark.analysis
