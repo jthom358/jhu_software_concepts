@@ -145,7 +145,10 @@ def test_open_channel_declares_durable_topology(monkeypatch):
         "amqp://guest:guest@example:5672/%2F",
     )
 
-    returned_connection, returned_channel = consumer.open_channel()
+    returned_connection, returned_channel = consumer.open_channel(
+        attempts=1,
+        retry_delay=0,
+    )
 
     assert returned_connection is connection
     assert returned_channel is channel
@@ -168,9 +171,16 @@ def test_open_channel_declares_durable_topology(monkeypatch):
 
 
 def test_run_worker_registers_manual_ack_consumer(monkeypatch):
-    """The worker registers its callback and closes when consumption ends."""
+    """The worker initializes data, registers its callback, and closes cleanly."""
     connection = Mock()
     channel = Mock()
+    initialize = Mock(return_value=0)
+
+    monkeypatch.setattr(
+        consumer,
+        "initialize_database",
+        initialize,
+    )
     monkeypatch.setattr(
         consumer,
         "open_channel",
@@ -179,6 +189,7 @@ def test_run_worker_registers_manual_ack_consumer(monkeypatch):
 
     consumer.run_worker()
 
+    initialize.assert_called_once_with()
     channel.basic_consume.assert_called_once_with(
         queue="tasks_q",
         on_message_callback=consumer.process_message,
@@ -187,13 +198,19 @@ def test_run_worker_registers_manual_ack_consumer(monkeypatch):
     channel.start_consuming.assert_called_once_with()
     connection.close.assert_called_once_with()
 
-
 def test_run_worker_closes_connection_after_consumer_error(monkeypatch):
-    """RabbitMQ connections close even if consumption exits with an error."""
+    """The connection closes if consumption exits with an error."""
     connection = Mock()
     channel = Mock()
+    initialize = Mock(return_value=0)
+
     channel.start_consuming.side_effect = RuntimeError("consumer stopped")
 
+    monkeypatch.setattr(
+        consumer,
+        "initialize_database",
+        initialize,
+    )
     monkeypatch.setattr(
         consumer,
         "open_channel",
@@ -203,6 +220,7 @@ def test_run_worker_closes_connection_after_consumer_error(monkeypatch):
     with pytest.raises(RuntimeError, match="consumer stopped"):
         consumer.run_worker()
 
+    initialize.assert_called_once_with()
     connection.close.assert_called_once_with()
 
 
@@ -252,3 +270,89 @@ def test_registered_task_handlers_are_complete():
         "scrape_new_data",
         "recompute_analytics",
     }
+
+
+def test_initialize_database_loads_configured_dataset(monkeypatch):
+    """Worker startup creates tables and loads the configured JSON file."""
+    create_tables = Mock()
+    load_data = Mock(return_value=21690)
+
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql://user:password@db:5432/gradcafe",
+    )
+    monkeypatch.setenv(
+        "APPLICANT_DATA_PATH",
+        "/data/applicant_data.json",
+    )
+    monkeypatch.setattr(
+        consumer,
+        "create_applicants_table",
+        create_tables,
+    )
+    monkeypatch.setattr(
+        consumer,
+        "load_initial_data",
+        load_data,
+    )
+
+    inserted = consumer.initialize_database()
+
+    assert inserted == 21690
+    create_tables.assert_called_once_with(
+        "postgresql://user:password@db:5432/gradcafe"
+    )
+    load_data.assert_called_once_with(
+        "postgresql://user:password@db:5432/gradcafe",
+        "/data/applicant_data.json",
+    )
+
+
+def test_open_channel_retries_connection_failure(monkeypatch):
+    """RabbitMQ startup failures are retried before succeeding."""
+    channel = Mock()
+    connection = Mock()
+    connection.channel.return_value = channel
+
+    blocking_connection = Mock(
+        side_effect=[
+            consumer.pika.exceptions.AMQPConnectionError(),
+            connection,
+        ]
+    )
+    sleep = Mock()
+
+    monkeypatch.setattr(
+        consumer.pika,
+        "BlockingConnection",
+        blocking_connection,
+    )
+    monkeypatch.setattr(consumer.time, "sleep", sleep)
+
+    returned_connection, returned_channel = consumer.open_channel(
+        attempts=2,
+        retry_delay=0.1,
+    )
+
+    assert returned_connection is connection
+    assert returned_channel is channel
+    assert blocking_connection.call_count == 2
+    sleep.assert_called_once_with(0.1)
+
+
+def test_open_channel_raises_after_all_attempts(monkeypatch):
+    """The final RabbitMQ connection failure is propagated."""
+    error = consumer.pika.exceptions.AMQPConnectionError()
+
+    monkeypatch.setattr(
+        consumer.pika,
+        "BlockingConnection",
+        Mock(side_effect=error),
+    )
+    monkeypatch.setattr(consumer.time, "sleep", Mock())
+
+    with pytest.raises(consumer.pika.exceptions.AMQPConnectionError):
+        consumer.open_channel(
+            attempts=2,
+            retry_delay=0,
+        )

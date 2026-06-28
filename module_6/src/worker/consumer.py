@@ -4,6 +4,7 @@
 
 import json
 import os
+import time
 from collections.abc import Callable
 from typing import Any
 
@@ -12,6 +13,7 @@ import pika
 from src.db.db_utils import connect
 from src.worker.etl.incremental_scraper import run_incremental_scrape
 from src.worker.etl.query_data import get_analysis_results
+from src.db.load_data import create_applicants_table, load_initial_data
 
 EXCHANGE = "tasks"
 QUEUE = "tasks_q"
@@ -94,33 +96,66 @@ def process_message(  # pylint: disable=too-many-arguments
     channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
-def open_channel() -> tuple[Any, Any]:
+def open_channel(
+    *,
+    attempts: int = 10,
+    retry_delay: float = 3.0,
+) -> tuple[Any, Any]:
     """Open RabbitMQ and declare the durable task topology."""
     rabbitmq_url = os.getenv(
         "RABBITMQ_URL",
         "amqp://guest:guest@localhost:5672/%2F",
     )
-    connection = pika.BlockingConnection(pika.URLParameters(rabbitmq_url))
-    channel = connection.channel()
 
-    channel.exchange_declare(
-        exchange=EXCHANGE,
-        exchange_type="direct",
-        durable=True,
-    )
-    channel.queue_declare(queue=QUEUE, durable=True)
-    channel.queue_bind(
-        exchange=EXCHANGE,
-        queue=QUEUE,
-        routing_key=ROUTING_KEY,
-    )
-    channel.basic_qos(prefetch_count=1)
+    last_error = None
 
-    return connection, channel
+    for attempt in range(1, attempts + 1):
+        try:
+            connection = pika.BlockingConnection(
+                pika.URLParameters(rabbitmq_url)
+            )
+            channel = connection.channel()
+
+            channel.exchange_declare(
+                exchange=EXCHANGE,
+                exchange_type="direct",
+                durable=True,
+            )
+            channel.queue_declare(queue=QUEUE, durable=True)
+            channel.queue_bind(
+                exchange=EXCHANGE,
+                queue=QUEUE,
+                routing_key=ROUTING_KEY,
+            )
+            channel.basic_qos(prefetch_count=1)
+
+            return connection, channel
+        except pika.exceptions.AMQPConnectionError as error:
+            last_error = error
+
+            if attempt < attempts:
+                time.sleep(retry_delay)
+
+    raise last_error
+
+
+def initialize_database() -> int:
+    """Create required tables and idempotently load the bundled dataset."""
+    database_url = os.getenv("DATABASE_URL")
+    data_path = os.getenv(
+        "APPLICANT_DATA_PATH",
+        "/data/applicant_data.json",
+    )
+
+    create_applicants_table(database_url)
+    return load_initial_data(database_url, data_path)
 
 
 def run_worker() -> None:
-    """Consume task messages until the worker is stopped."""
+    """Initialize data and consume task messages until stopped."""
+    inserted = initialize_database()
+    print(f"Initial data load complete: {inserted} records inserted.")
+
     connection, channel = open_channel()
 
     channel.basic_consume(
