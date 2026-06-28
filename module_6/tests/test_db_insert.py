@@ -4,7 +4,8 @@ import json
 
 import pytest
 
-from src.db.db_utils import get_database_url
+import src.db.load_data as load_data
+from src.db.db_utils import connect, get_database_url
 from src.db.load_data import (
     build_program,
     clean_date,
@@ -15,6 +16,9 @@ from src.db.load_data import (
     load_initial_data,
     load_json_records,
     normalize_record,
+    get_watermark,
+    insert_applicants_with_connection,
+    update_watermark,
 )
 from src.worker.etl.query_data import get_analysis_results, get_expected_keys
 from src.db.db_utils import connect
@@ -121,3 +125,81 @@ def test_database_url_resolution(monkeypatch):
     monkeypatch.setenv("DB_HOST", "localhost")
     monkeypatch.setenv("DB_PORT", "5432")
     assert get_database_url() == "postgresql://postgres:pw@localhost:5432/gradcafe"
+
+
+def test_insert_with_existing_connection_requires_caller_commit(empty_database):
+    """Connection-based inserts remain under caller transaction control."""
+    with connect(empty_database) as conn:
+        inserted = insert_applicants_with_connection(conn, SAMPLE_RECORDS)
+
+        assert inserted == 2
+
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM applicants;")
+            assert cur.fetchone()[0] == 2
+
+        conn.rollback()
+
+    with connect(empty_database) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM applicants;")
+            assert cur.fetchone()[0] == 0
+
+
+def test_watermark_round_trip(empty_database):
+    """Watermarks are inserted and updated idempotently."""
+    with connect(empty_database) as conn:
+        assert get_watermark(conn, "gradcafe") is None
+
+        update_watermark(conn, "gradcafe", "2026-06-01")
+        assert get_watermark(conn, "gradcafe") == "2026-06-01"
+
+        update_watermark(conn, "gradcafe", "2026-06-02")
+        assert get_watermark(conn, "gradcafe") == "2026-06-02"
+
+        conn.commit()
+
+
+def test_insert_applicants_rolls_back_on_failure(monkeypatch):
+    """A failed insert rolls back and propagates the original error."""
+
+    class FakeConnection:
+        """Minimal connection object for testing transaction behavior."""
+
+        def __init__(self):
+            self.rolled_back = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+        def commit(self):
+            raise AssertionError("Commit must not occur after an insert failure.")
+
+        def rollback(self):
+            self.rolled_back = True
+
+    fake_connection = FakeConnection()
+
+    monkeypatch.setattr(
+        load_data,
+        "connect",
+        lambda database_url=None: fake_connection,
+    )
+
+    def raise_insert_error(conn, records):
+        del conn, records
+        raise RuntimeError("simulated insert failure")
+
+    monkeypatch.setattr(
+        load_data,
+        "insert_applicants_with_connection",
+        raise_insert_error,
+    )
+
+    with pytest.raises(RuntimeError, match="simulated insert failure"):
+        load_data.insert_applicants([], "postgresql://unused")
+
+    assert fake_connection.rolled_back is True

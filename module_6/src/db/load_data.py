@@ -146,6 +146,7 @@ def create_applicants_table(
     with connect(database_url) as conn:
         with conn.cursor() as cur:
             if drop_existing:
+                cur.execute("DROP TABLE IF EXISTS ingestion_watermarks;")
                 cur.execute("DROP TABLE IF EXISTS applicants;")
             cur.execute(
                 """
@@ -179,6 +180,15 @@ def create_applicants_table(
                 );
                 """
             )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS ingestion_watermarks (
+                    source TEXT PRIMARY KEY,
+                    last_seen TEXT,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
 
 
 def next_applicant_id(cur: Any) -> int:
@@ -187,52 +197,81 @@ def next_applicant_id(cur: Any) -> int:
     return int(cur.fetchone()[0])
 
 
+def insert_applicants_with_connection(
+    conn: Any,
+    records: Iterable[dict[str, Any]],
+) -> int:
+    """Insert normalized applicants using an existing transaction."""
+    inserted = 0
+
+    with conn.cursor() as cur:
+        p_id = next_applicant_id(cur)
+
+        for source_record in records:
+            record = normalize_record(source_record, p_id)
+            if record is None:
+                continue
+
+            cur.execute(
+                """
+                INSERT INTO applicants (
+                    p_id,
+                    program,
+                    comments,
+                    date_added,
+                    url,
+                    status,
+                    term,
+                    us_or_international,
+                    gpa,
+                    gre,
+                    gre_v,
+                    gre_aw,
+                    degree,
+                    llm_generated_program,
+                    llm_generated_university
+                )
+                VALUES (
+                    %(p_id)s,
+                    %(program)s,
+                    %(comments)s,
+                    %(date_added)s,
+                    %(url)s,
+                    %(status)s,
+                    %(term)s,
+                    %(us_or_international)s,
+                    %(gpa)s,
+                    %(gre)s,
+                    %(gre_v)s,
+                    %(gre_aw)s,
+                    %(degree)s,
+                    %(llm_generated_program)s,
+                    %(llm_generated_university)s
+                )
+                ON CONFLICT DO NOTHING;
+                """,
+                record,
+            )
+
+            if cur.rowcount == 1:
+                inserted += 1
+                p_id += 1
+
+    return inserted
+
+
 def insert_applicants(
     records: Iterable[dict[str, Any]],
     database_url: str | None = None,
 ) -> int:
-    """Insert records into PostgreSQL without duplicating likely duplicate applicants."""
-    inserted = 0
-
+    """Insert records using a self-managed database transaction."""
     with connect(database_url) as conn:
-        with conn.cursor() as cur:
-            p_id = next_applicant_id(cur)
-            for source_record in records:
-                record = normalize_record(source_record, p_id)
-                if record is None:
-                    continue
-
-                cur.execute(
-                    """
-                    INSERT INTO applicants (
-                        p_id, program, comments, date_added, url, status, term,
-                        us_or_international, gpa, gre, gre_v, gre_aw, degree,
-                        llm_generated_program, llm_generated_university
-                    )
-                    SELECT %(p_id)s, %(program)s, %(comments)s, %(date_added)s, %(url)s,
-                           %(status)s, %(term)s, %(us_or_international)s, %(gpa)s,
-                           %(gre)s, %(gre_v)s, %(gre_aw)s, %(degree)s,
-                           %(llm_generated_program)s, %(llm_generated_university)s
-                    WHERE NOT EXISTS (
-                        SELECT 1 FROM applicants
-                        WHERE COALESCE(program, '') = COALESCE(%(program)s, '')
-                          AND COALESCE(
-                            date_added,
-                            DATE '1900-01-01'
-                        ) = COALESCE(
-                            %(date_added)s,
-                            DATE '1900-01-01'
-                        )
-                          AND COALESCE(status, '') = COALESCE(%(status)s, '')
-                          AND COALESCE(degree, '') = COALESCE(%(degree)s, '')
-                    );
-                    """,
-                    record,
-                )
-                if cur.rowcount == 1:
-                    inserted += 1
-                    p_id += 1
+        try:
+            inserted = insert_applicants_with_connection(conn, records)
             conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
 
     return inserted
 
@@ -247,6 +286,43 @@ def load_initial_data(database_url: str | None = None, data_file: str = DATA_FIL
     """Drop, recreate, and load the applicants table from the Module 3 JSON file."""
     create_applicants_table(database_url, drop_existing=True)
     return insert_applicants(load_json_records(data_file), database_url)
+
+
+def get_watermark(conn: Any, source: str) -> str | None:
+    """Return the last processed watermark for a source."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT last_seen
+            FROM ingestion_watermarks
+            WHERE source = %s
+            LIMIT 1;
+            """,
+            (source,),
+        )
+        row = cur.fetchone()
+
+    return row[0] if row else None
+
+
+def update_watermark(conn: Any, source: str, last_seen: str) -> None:
+    """Insert or advance the watermark within the current transaction."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO ingestion_watermarks (
+                source,
+                last_seen,
+                updated_at
+            )
+            VALUES (%s, %s, NOW())
+            ON CONFLICT (source)
+            DO UPDATE SET
+                last_seen = EXCLUDED.last_seen,
+                updated_at = NOW();
+            """,
+            (source, last_seen),
+        )
 
 
 if __name__ == "__main__":
