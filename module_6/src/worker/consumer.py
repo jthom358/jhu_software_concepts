@@ -10,13 +10,41 @@ from typing import Any
 import pika
 
 from src.db.db_utils import connect
+from src.worker.etl.incremental_scraper import run_incremental_scrape
+from src.worker.etl.query_data import get_analysis_results
 
 EXCHANGE = "tasks"
 QUEUE = "tasks_q"
 ROUTING_KEY = "tasks"
 
-TaskHandler = Callable[[Any, dict[str, Any]], None]
-TASK_HANDLERS: dict[str, TaskHandler] = {}
+TaskHandler = Callable[[Any, dict[str, Any]], Any]
+
+
+def handle_scrape_new_data(
+    connection: Any,
+    payload: dict[str, Any],
+) -> dict[str, int]:
+    """Run incremental GradCafe ingestion."""
+    return run_incremental_scrape(connection, payload)
+
+
+def handle_recompute_analytics(
+    connection: Any,
+    payload: dict[str, Any],
+) -> list[dict[str, str]]:
+    """Recompute all analytics using the active transaction."""
+    requested_limit = payload.get("limit", 1)
+
+    return get_analysis_results(
+        requested_limit=requested_limit,
+        connection=connection,
+    )
+
+
+TASK_HANDLERS: dict[str, TaskHandler] = {
+    "scrape_new_data": handle_scrape_new_data,
+    "recompute_analytics": handle_recompute_analytics,
+}
 
 
 def process_message(  # pylint: disable=too-many-arguments

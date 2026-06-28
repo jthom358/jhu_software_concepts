@@ -159,6 +159,19 @@ def test_watermark_round_trip(empty_database):
 
         conn.commit()
 
+@pytest.mark.db
+def test_analysis_queries_accept_existing_connection(empty_database):
+    """Analytics can execute inside a worker-owned transaction."""
+    insert_applicants(SAMPLE_RECORDS, empty_database)
+
+    with connect(empty_database) as conn:
+        results = get_analysis_results(connection=conn)
+
+    assert results
+    assert all(
+        get_expected_keys().issubset(result.keys())
+        for result in results
+    )
 
 def test_insert_applicants_rolls_back_on_failure(monkeypatch):
     """A failed insert rolls back and propagates the original error."""

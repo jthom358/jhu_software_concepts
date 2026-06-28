@@ -66,6 +66,8 @@ def format_answer(value: Any, *, percentage: bool = False) -> str:
 def get_analysis_results(
     database_url: str | None = None,
     requested_limit: Any = DEFAULT_QUERY_LIMIT,
+    *,
+    connection: Any | None = None,
 ) -> list[dict[str, str]]:
     """Run the analysis queries using safe SQL and a bounded limit."""
     limit = clamp_limit(requested_limit)
@@ -325,10 +327,11 @@ def get_analysis_results(
         ),
     ]
 
-    results: list[dict[str, str]] = []
+    def execute_queries(active_connection: Any) -> list[dict[str, str]]:
+        """Execute all analysis queries using the supplied connection."""
+        results: list[dict[str, str]] = []
 
-    with connect(database_url) as connection:
-        with connection.cursor() as cursor:
+        with active_connection.cursor() as cursor:
             for question, query_text, params, percentage in query_specs:
                 statement = build_statement(query_text)
                 results.append(
@@ -341,7 +344,13 @@ def get_analysis_results(
                     )
                 )
 
-    return results
+        return results
+
+    if connection is not None:
+        return execute_queries(connection)
+
+    with connect(database_url) as managed_connection:
+        return execute_queries(managed_connection)
 
 
 def get_expected_keys() -> set[str]:

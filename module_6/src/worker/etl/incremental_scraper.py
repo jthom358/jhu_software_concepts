@@ -14,13 +14,20 @@ import json
 import random
 import time
 import re
+import hashlib
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urljoin
 from urllib.request import Request, urlopen
 from urllib.robotparser import RobotFileParser
 from bs4 import BeautifulSoup
+
+from src.db.load_data import (
+    get_watermark,
+    insert_applicants_with_connection,
+    update_watermark,
+)
 
 BASE_URL = "https://www.thegradcafe.com"
 SURVEY_PATH = "/survey/"
@@ -449,6 +456,82 @@ def main() -> None:
     loaded_records = load_data()
 
     print(f"\nSaved and loaded {len(loaded_records)} records from {OUTPUT_PATH}.")
+
+def record_watermark(record: dict[str, Any]) -> str:
+    """Return a stable fingerprint for one scraped applicant record."""
+    fields = {
+        "university_raw": record.get("university_raw"),
+        "program_name_raw": record.get("program_name_raw"),
+        "date_added": record.get("date_added"),
+        "applicant_status": record.get("applicant_status"),
+        "degree": record.get("degree"),
+    }
+
+    serialized = json.dumps(
+        fields,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+
+def records_after_watermark(
+    records: list[dict[str, Any]],
+    last_seen: str | None,
+) -> list[dict[str, Any]]:
+    """Return records encountered before the previous newest record."""
+    if last_seen is None:
+        return records
+
+    new_records = []
+
+    for record in records:
+        if record_watermark(record) == last_seen:
+            break
+
+        new_records.append(record)
+
+    return new_records
+
+
+def run_incremental_scrape(
+    connection: Any,
+    payload: dict[str, Any],
+    *,
+    scraper: Callable[..., list[dict[str, Any]]] = scrape_data,
+) -> dict[str, int]:
+    """Scrape and insert records using a transaction-owned connection."""
+    requested_target = payload.get("target_records", TARGET_RECORDS)
+
+    try:
+        target_records = int(requested_target)
+    except (TypeError, ValueError):
+        target_records = TARGET_RECORDS
+
+    target_records = max(1, min(target_records, 100))
+
+    records = scraper(target_records=target_records)
+    previous_watermark = get_watermark(connection, "gradcafe")
+    new_records = records_after_watermark(records, previous_watermark)
+
+    inserted = insert_applicants_with_connection(
+        connection,
+        new_records,
+    )
+
+    if records:
+        update_watermark(
+            connection,
+            "gradcafe",
+            record_watermark(records[0]),
+        )
+
+    return {
+        "pulled": len(records),
+        "new": len(new_records),
+        "inserted": inserted,
+    }
 
 if __name__ == "__main__":
     main()

@@ -204,3 +204,51 @@ def test_run_worker_closes_connection_after_consumer_error(monkeypatch):
         consumer.run_worker()
 
     connection.close.assert_called_once_with()
+
+
+def test_scrape_handler_calls_incremental_ingestion(monkeypatch):
+    """The scrape task delegates to the incremental ETL handler."""
+    connection = Mock()
+    expected = {"pulled": 2, "new": 1, "inserted": 1}
+
+    task = Mock(return_value=expected)
+    monkeypatch.setattr(consumer, "run_incremental_scrape", task)
+
+    result = consumer.handle_scrape_new_data(
+        connection,
+        {"target_records": 25},
+    )
+
+    assert result == expected
+    task.assert_called_once_with(
+        connection,
+        {"target_records": 25},
+    )
+
+
+def test_analytics_handler_uses_existing_connection(monkeypatch):
+    """Analytics execute through the message transaction."""
+    connection = Mock()
+    expected = [{"question": "Example", "answer": "1", "sql": "SELECT 1"}]
+
+    query = Mock(return_value=expected)
+    monkeypatch.setattr(consumer, "get_analysis_results", query)
+
+    result = consumer.handle_recompute_analytics(
+        connection,
+        {"limit": 5},
+    )
+
+    assert result == expected
+    query.assert_called_once_with(
+        requested_limit=5,
+        connection=connection,
+    )
+
+
+def test_registered_task_handlers_are_complete():
+    """Both published task kinds have worker handlers."""
+    assert set(consumer.TASK_HANDLERS) == {
+        "scrape_new_data",
+        "recompute_analytics",
+    }
