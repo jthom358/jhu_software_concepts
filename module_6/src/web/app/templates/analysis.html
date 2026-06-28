@@ -11,13 +11,10 @@
                 containing cleaned GradCafe applicant entries.
             </p>
             <p class="helper-text">
-                Pull Data checks GradCafe for recent applicant records and adds records
-                that are not already in the database. Update Analysis refreshes the
-                displayed analysis using the latest database results.
+                Pull Data queues a background task that checks GradCafe for recent
+                applicant records. Update Analysis queues a background refresh using
+                the latest database data. You may leave this page while either task runs.
             </p>
-            {% if scraping_running %}
-                <p class="warning" data-testid="busy-warning">Pull Data is currently running. Please wait before updating analysis.</p>
-            {% endif %}
         </div>
 
         <div class="button-column">

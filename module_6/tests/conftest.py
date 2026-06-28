@@ -19,21 +19,33 @@ def fake_results():
 
 
 @pytest.fixture
-def web_app(fake_results):
-    calls = {"pull": 0, "query": 0}
+def web_app(fake_results, database_url):
+    """Create a Flask test application with fake query and publisher functions."""
+    calls = {
+        "query": 0,
+        "publish": [],
+    }
 
-    def fake_pull(database_url=None):
-        calls["pull"] += 1
-        return {"pulled": 2, "inserted": 2}
-
-    def fake_query(database_url=None):
+    def fake_query(_database_url=None):
         calls["query"] += 1
         return fake_results
 
+    def fake_publish(kind, payload=None, headers=None):
+        calls["publish"].append(
+            {
+                "kind": kind,
+                "payload": payload,
+                "headers": headers,
+            }
+        )
+
     app = create_app(
-        {"TESTING": True, "DATABASE_URL": "postgresql://example/test"},
-        pull_func=fake_pull,
+        {
+            "TESTING": True,
+            "DATABASE_URL": database_url,
+        },
         query_func=fake_query,
+        publish_func=fake_publish,
     )
     app.test_calls = calls
     return app

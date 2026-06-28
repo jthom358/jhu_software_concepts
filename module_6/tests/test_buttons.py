@@ -1,50 +1,91 @@
-"""Tests for button endpoints and busy-state behavior."""
+"""Tests for asynchronous Flask button endpoints."""
 
 import pytest
 
+from src.web.app import create_app
+
 
 @pytest.mark.buttons
-def test_post_pull_data_returns_ok_and_triggers_loader(web_app):
+def test_post_pull_data_queues_scrape_task(web_app):
+    """Pull Data queues the scrape task and returns HTTP 202."""
     response = web_app.test_client().post("/pull-data")
-    assert response.status_code == 200
-    assert response.get_json() == {"ok": True, "pulled": 2, "inserted": 2}
-    assert web_app.test_calls["pull"] == 1
+
+    assert response.status_code == 202
+    assert response.get_json() == {
+        "ok": True,
+        "queued": True,
+        "message": "Data pull request queued.",
+    }
+    assert web_app.test_calls["publish"] == [
+        {
+            "kind": "scrape_new_data",
+            "payload": {},
+            "headers": None,
+        }
+    ]
 
 
 @pytest.mark.buttons
-def test_post_update_analysis_returns_ok_when_not_busy(web_app):
+def test_post_update_analysis_queues_recompute_task(web_app):
+    """Update Analysis queues the analytics task and returns HTTP 202."""
     response = web_app.test_client().post("/update-analysis")
-    assert response.status_code == 200
-    assert response.get_json() == {"ok": True, "count": 2}
-    assert web_app.test_calls["query"] == 1
+
+    assert response.status_code == 202
+    assert response.get_json() == {
+        "ok": True,
+        "queued": True,
+        "message": "Analysis refresh request queued.",
+    }
+    assert web_app.test_calls["publish"] == [
+        {
+            "kind": "recompute_analytics",
+            "payload": {},
+            "headers": None,
+        }
+    ]
 
 
 @pytest.mark.buttons
-def test_update_analysis_returns_409_and_does_not_update_when_busy(web_app):
-    web_app.config["PULL_IN_PROGRESS"] = True
-    response = web_app.test_client().post("/update-analysis")
-    assert response.status_code == 409
-    assert response.get_json() == {"ok": False, "busy": True}
-    assert web_app.test_calls["query"] == 0
+def test_pull_data_returns_503_when_queue_is_unavailable(fake_results):
+    """Pull Data returns 503 when RabbitMQ publishing fails."""
+
+    def broken_publish(_kind, _payload=None, _headers=None):
+        raise RuntimeError("RabbitMQ unavailable")
+
+    app = create_app(
+        {"TESTING": True},
+        query_func=lambda _database_url=None: fake_results,
+        publish_func=broken_publish,
+    )
+
+    response = app.test_client().post("/pull-data")
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "ok": False,
+        "queued": False,
+        "message": "Task queue unavailable.",
+    }
 
 
 @pytest.mark.buttons
-def test_pull_data_returns_409_when_busy(web_app):
-    web_app.config["PULL_IN_PROGRESS"] = True
-    response = web_app.test_client().post("/pull-data")
-    assert response.status_code == 409
-    assert response.get_json() == {"ok": False, "busy": True}
-    assert web_app.test_calls["pull"] == 0
+def test_update_analysis_returns_503_when_queue_is_unavailable(fake_results):
+    """Update Analysis returns 503 when RabbitMQ publishing fails."""
 
+    def broken_publish(_kind, _payload=None, _headers=None):
+        raise RuntimeError("RabbitMQ unavailable")
 
-@pytest.mark.buttons
-def test_pull_data_clears_busy_flag_after_loader_error(fake_results):
-    def broken_pull(database_url=None):
-        raise ValueError("loader failed")
+    app = create_app(
+        {"TESTING": True},
+        query_func=lambda _database_url=None: fake_results,
+        publish_func=broken_publish,
+    )
 
-    from src.web.app import create_app
+    response = app.test_client().post("/update-analysis")
 
-    app = create_app({"TESTING": True}, pull_func=broken_pull, query_func=lambda database_url=None: fake_results)
-    with pytest.raises(ValueError):
-        app.test_client().post("/pull-data")
-    assert app.config["PULL_IN_PROGRESS"] is False
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "ok": False,
+        "queued": False,
+        "message": "Task queue unavailable.",
+    }
