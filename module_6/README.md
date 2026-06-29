@@ -74,20 +74,40 @@ module_6/
 
 ## Docker Hub Images
 
-The two application images are published in the public Docker Hub repository:
+The web and worker images are published in the public Docker Hub repository:
 
-```text
-jthom358/module_6
-```
+https://hub.docker.com/r/jthom358/module_6
 
-Available tags:
+Available image tags:
 
 ```text
 jthom358/module_6:web
 jthom358/module_6:worker
 ```
 
-The Compose file includes both `image` and `build` declarations. This allows the application images to be built locally or identified by their published Docker Hub tags.
+Pull both published images directly with:
+
+```powershell
+docker pull jthom358/module_6:web
+docker pull jthom358/module_6:worker
+```
+
+The Compose file contains both `image:` and `build:` declarations for the web and worker services. Therefore, the stack can either build the application images locally or use the corresponding published image tags.
+
+To build locally and start the complete four-service stack:
+
+```powershell
+docker compose up -d --build
+```
+
+To pull the published images first and then start the stack:
+
+```powershell
+docker compose pull web worker
+docker compose up -d
+```
+
+The published repository is public so both application images can be pulled without access to the private GitHub source repository.
 
 ## Requirements
 
