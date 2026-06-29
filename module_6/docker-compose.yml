@@ -9,11 +9,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./src/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U gradcafe_app -d gradcafe",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U gradcafe_app -d gradcafe"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -30,14 +26,19 @@ services:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test:  
+        [
+          "CMD-SHELL",
+          "rabbitmq-diagnostics -q ping && rabbitmq-diagnostics -q check_port_connectivity"
+        ]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 12
     networks:
       - module6_network
 
   web:
+    image: jthom358/module_6:web
     build:
       context: .
       dockerfile: src/web/Dockerfile
@@ -55,6 +56,7 @@ services:
       - module6_network
 
   worker:
+    image: jthom358/module_6:worker
     build:
       context: .
       dockerfile: src/worker/Dockerfile
