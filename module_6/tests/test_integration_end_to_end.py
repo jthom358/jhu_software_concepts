@@ -1,5 +1,6 @@
 """End-to-end tests for pull, update, render, and repeated pulls."""
 
+from http import client
 import re
 
 import pytest
@@ -33,8 +34,8 @@ def test_end_to_end_pull_update_render(empty_database):
     client = app.test_client()
 
     pull_response = client.post("/pull-data")
-    assert pull_response.status_code == 202
-    assert pull_response.get_json()["queued"] is True
+    assert pull_response.status_code == 303
+    assert pull_response.headers["Location"].endswith("/analysis")
     assert published_tasks[-1]["kind"] == "scrape_new_data"
 
     # Simulate the worker processing the queued scrape task.
@@ -42,8 +43,8 @@ def test_end_to_end_pull_update_render(empty_database):
     assert inserted == 2
 
     update_response = client.post("/update-analysis")
-    assert update_response.status_code == 202
-    assert update_response.get_json()["queued"] is True
+    assert update_response.status_code == 303
+    assert update_response.headers["Location"].endswith("/analysis")
     assert published_tasks[-1]["kind"] == "recompute_analytics"
 
     page = client.get("/analysis")
@@ -76,13 +77,15 @@ def test_multiple_pulls_with_overlapping_data_remain_consistent(empty_database):
     client = app.test_client()
 
     first_response = client.post("/pull-data")
-    assert first_response.status_code == 202
+    assert first_response.status_code == 303
+    assert first_response.headers["Location"].endswith("/analysis")
 
     first_inserted = insert_applicants(SAMPLE_RECORDS, empty_database)
     assert first_inserted == 2
 
     second_response = client.post("/pull-data")
-    assert second_response.status_code == 202
+    assert second_response.status_code == 303
+    assert second_response.headers["Location"].endswith("/analysis")
 
     second_inserted = insert_applicants(SAMPLE_RECORDS, empty_database)
     assert second_inserted == 0

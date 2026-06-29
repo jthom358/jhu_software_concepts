@@ -7,15 +7,11 @@ from src.web.app import create_app
 
 @pytest.mark.buttons
 def test_post_pull_data_queues_scrape_task(web_app):
-    """Pull Data queues the scrape task and returns HTTP 202."""
+    """Pull Data queues the scrape task and redirects to analysis."""
     response = web_app.test_client().post("/pull-data")
 
-    assert response.status_code == 202
-    assert response.get_json() == {
-        "ok": True,
-        "queued": True,
-        "message": "Data pull request queued.",
-    }
+    assert response.status_code == 303
+    assert response.headers["Location"].endswith("/analysis")
     assert web_app.test_calls["publish"] == [
         {
             "kind": "scrape_new_data",
@@ -27,15 +23,11 @@ def test_post_pull_data_queues_scrape_task(web_app):
 
 @pytest.mark.buttons
 def test_post_update_analysis_queues_recompute_task(web_app):
-    """Update Analysis queues the analytics task and returns HTTP 202."""
+    """Update Analysis queues the analytics task and redirects to analysis."""
     response = web_app.test_client().post("/update-analysis")
 
-    assert response.status_code == 202
-    assert response.get_json() == {
-        "ok": True,
-        "queued": True,
-        "message": "Analysis refresh request queued.",
-    }
+    assert response.status_code == 303
+    assert response.headers["Location"].endswith("/analysis")
     assert web_app.test_calls["publish"] == [
         {
             "kind": "recompute_analytics",

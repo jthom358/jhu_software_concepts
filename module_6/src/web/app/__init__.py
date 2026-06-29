@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import Callable
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, redirect, render_template, url_for
 
 from src.web.publisher import publish_task
 from src.worker.etl.query_data import get_analysis_results
@@ -71,13 +71,7 @@ def create_app(
                 }
             ), 503
 
-        return jsonify(
-            {
-                "ok": True,
-                "queued": True,
-                "message": "Data pull request queued.",
-            }
-        ), 202
+        return redirect(url_for("analysis"), code=303)
 
     @flask_app.post("/update-analysis")
     def update_analysis():
@@ -96,12 +90,6 @@ def create_app(
                 }
             ), 503
 
-        return jsonify(
-            {
-                "ok": True,
-                "queued": True,
-                "message": "Analysis refresh request queued.",
-            }
-        ), 202
+        return redirect(url_for("analysis"), code=303)
 
     return flask_app
