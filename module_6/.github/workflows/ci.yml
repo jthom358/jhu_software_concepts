@@ -1,126 +1,120 @@
-name: Module 6 Microservices CI
+﻿name: Module 6 Microservices CI
 
 on:
-push:
-branches: [main]
-paths:
-- "module_6/**"
-- ".github/workflows/module6-ci.yml"
-pull_request:
-branches: [main]
-paths:
-- "module_6/**"
-- ".github/workflows/module6-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "module_6/**"
+      - ".github/workflows/module6-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "module_6/**"
+      - ".github/workflows/module6-ci.yml"
 
 jobs:
-pylint:
-name: Pylint 10 of 10
-runs-on: ubuntu-latest
+  pylint:
+    name: Pylint 10 of 10
+    runs-on: ubuntu-latest
 
-```
-steps:
-  - name: Check out repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-  - name: Set up Python
-    uses: actions/setup-python@v5
-    with:
-      python-version: "3.12"
-      cache: pip
-      cache-dependency-path: |
-        module_6/src/web/requirements.txt
-        module_6/src/worker/requirements.txt
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            module_6/src/web/requirements.txt
+            module_6/src/worker/requirements.txt
 
-  - name: Install dependencies
-    working-directory: module_6
-    run: |
-      python -m pip install --upgrade pip
-      python -m pip install -r src/web/requirements.txt
-      python -m pip install -r src/worker/requirements.txt
-      python -m pip install pylint pytest pytest-cov
-      python -m pip install -e .
-      python -m pip check
+      - name: Install dependencies
+        working-directory: module_6
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r src/web/requirements.txt
+          python -m pip install -r src/worker/requirements.txt
+          python -m pip install pylint pytest pytest-cov
+          python -m pip install -e .
+          python -m pip check
 
-  - name: Run Pylint
-    working-directory: module_6
-    run: |
-      python -m pylint src --fail-under=10
-```
+      - name: Run Pylint
+        working-directory: module_6
+        run: |
+          python -m pylint src --fail-under=10
 
-pytest:
-name: Pytest 100 Percent Coverage
-runs-on: ubuntu-latest
+  pytest:
+    name: Pytest 100 Percent Coverage
+    runs-on: ubuntu-latest
 
-```
-services:
-  postgres:
-    image: postgres:16-alpine
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gradcafe_app
+          POSTGRES_PASSWORD: gradcafe_password
+          POSTGRES_DB: gradcafe_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U gradcafe_app -d gradcafe_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+
     env:
-      POSTGRES_USER: gradcafe_app
-      POSTGRES_PASSWORD: gradcafe_password
-      POSTGRES_DB: gradcafe_test
-    ports:
-      - 5432:5432
-    options: >-
-      --health-cmd="pg_isready -U gradcafe_app -d gradcafe_test"
-      --health-interval=5s
-      --health-timeout=5s
-      --health-retries=12
+      TEST_DATABASE_URL: postgresql://gradcafe_app:gradcafe_password@localhost:5432/gradcafe_test
+      DATABASE_URL: postgresql://gradcafe_app:gradcafe_password@localhost:5432/gradcafe_test
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_NAME: gradcafe_test
+      DB_USER: gradcafe_app
+      DB_PASSWORD: gradcafe_password
 
-env:
-  TEST_DATABASE_URL: postgresql://gradcafe_app:gradcafe_password@localhost:5432/gradcafe_test
-  DATABASE_URL: postgresql://gradcafe_app:gradcafe_password@localhost:5432/gradcafe_test
-  DB_HOST: localhost
-  DB_PORT: "5432"
-  DB_NAME: gradcafe_test
-  DB_USER: gradcafe_app
-  DB_PASSWORD: gradcafe_password
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-steps:
-  - name: Check out repository
-    uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            module_6/src/web/requirements.txt
+            module_6/src/worker/requirements.txt
 
-  - name: Set up Python
-    uses: actions/setup-python@v5
-    with:
-      python-version: "3.12"
-      cache: pip
-      cache-dependency-path: |
-        module_6/src/web/requirements.txt
-        module_6/src/worker/requirements.txt
+      - name: Install dependencies
+        working-directory: module_6
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r src/web/requirements.txt
+          python -m pip install -r src/worker/requirements.txt
+          python -m pip install pytest pytest-cov
+          python -m pip install -e .
+          python -m pip check
 
-  - name: Install dependencies
-    working-directory: module_6
-    run: |
-      python -m pip install --upgrade pip
-      python -m pip install -r src/web/requirements.txt
-      python -m pip install -r src/worker/requirements.txt
-      python -m pip install pytest pytest-cov
-      python -m pip install -e .
-      python -m pip check
+      - name: Run tests with coverage
+        working-directory: module_6
+        run: |
+          python -m pytest
 
-  - name: Run tests with coverage
-    working-directory: module_6
-    run: |
-      python -m pytest
-```
+  docker:
+    name: Validate and Build Docker Stack
+    runs-on: ubuntu-latest
 
-docker:
-name: Validate and Build Docker Stack
-runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-```
-steps:
-  - name: Check out repository
-    uses: actions/checkout@v4
+      - name: Validate Docker Compose
+        working-directory: module_6
+        run: |
+          docker compose config
 
-  - name: Validate Docker Compose
-    working-directory: module_6
-    run: |
-      docker compose config
-
-  - name: Build web and worker images
-    working-directory: module_6
-    run: |
-      docker compose build web worker
-```
+      - name: Build web and worker images
+        working-directory: module_6
+        run: |
+          docker compose build web worker
